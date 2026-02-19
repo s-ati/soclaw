@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Questionnaire (8 questions)</h1>
+<p>Scale: 1 = Strongly disagree … 5 = Strongly agree</p>
+
+<form method="post" action="/profile/questionnaire">
+  {% for q in questions %}
+    <div class="qblock">
+      <label><b>{{ q.id }}</b> — {{ q.text }}</label>
+      <select name="{{ q.id }}" required>
+        <option value="">Select</option>
+        <option value="1">1</option><option value="2">2</option>
+        <option value="3">3</option><option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+  {% endfor %}
+  <button type="submit">Save questionnaire</button>
+</form>
+
+{% if message %}<p class="success">{{ message }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% endblock %}

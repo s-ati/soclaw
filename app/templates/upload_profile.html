@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Upload profile</h1>
+<form method="post" action="/profile/upload" enctype="multipart/form-data">
+  <label>CV PDF (required)</label>
+  <input type="file" name="cv_pdf" accept="application/pdf" required>
+
+  <label>LinkedIn PDF (optional)</label>
+  <input type="file" name="linkedin_pdf" accept="application/pdf">
+
+  <label>LinkedIn URL (optional; will appear on PDF)</label>
+  <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/...">
+
+  <label>Remote-only? (if yes, onsite jobs will be capped)</label>
+  <select name="remote_only">
+    <option value="no">No</option>
+    <option value="yes">Yes</option>
+  </select>
+
+  <button type="submit">Save profile</button>
+</form>
+
+{% if message %}<p class="success">{{ message }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Login</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="container">
+  <h1>Login</h1>
+  <form method="post" action="/login">
+    <label>Email</label><input name="email" type="email" required>
+    <label>Password</label><input name="password" type="password" required>
+    <button type="submit">Login</button>
+  </form>
+  <p>No account? <a href="/register">Register</a></p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="card">
+  <h2>Status</h2>
+  <p><b>Profile:</b> {{ "Ready" if profile_ready else "Missing (upload CV)" }}</p>
+  <p><b>Questionnaire:</b> {{ "Completed" if questionnaire_ready else "Missing" }}</p>
+</div>
+
+<div class="card">
+  <h2>Next steps</h2>
+  <ol>
+    <li>Upload CV (and optionally LinkedIn PDF + LinkedIn URL)</li>
+    <li>Fill out the 8-question questionnaire</li>
+    <li>Go to Jobs → click "Test" to generate a 2-page report</li>
+  </ol>
+</div>
+
+<div class="card">
+  <h2>Recent reports</h2>
+  {% if assessments %}
+    <ul>
+      {% for a in assessments %}
+        <li>
+          <b>{{ a.job_title }}</b> — {{ a.match_score }}% ({{ a.recommendation }})
+          — <a href="/assessments/{{ a.id }}/pdf">Download PDF</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No assessments yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

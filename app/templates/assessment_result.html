@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Assessment result</h1>
+
+<div class="card">
+  <p><b>Match Score:</b> {{ match_score }}%</p>
+  <p><b>Recommendation:</b> {{ recommendation }}</p>
+  {% if flags %}
+    <p><b>Flags:</b> {{ flags|join(", ") }}</p>
+  {% endif %}
+  <p><a href="/assessments/{{ assessment_id }}/pdf">Download PDF report</a></p>
+</div>
+
+<div class="card">
+  <h2>SOCAWL fits</h2>
+  <pre>{{ fits }}</pre>
+</div>
+
+<div class="card">
+  <h2>SOCAWL risks</h2>
+  <pre>{{ risks }}</pre>
+</div>
+
+{% endblock %}

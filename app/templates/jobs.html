@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Jobs</h1>
+<p>Select a job to run the assessment. Your uploaded profile + questionnaire will be reused.</p>
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<div class="card">
+  <table>
+    <tr><th>Title</th><th>Company</th><th>Location policy</th><th></th></tr>
+    {% for j in jobs %}
+      <tr>
+        <td>{{ j.title }}</td>
+        <td>{{ j.company }}</td>
+        <td>{{ j.location_policy }}</td>
+        <td>
+          <form method="post" action="/assess/{{ j.id }}">
+            <button type="submit">Test → Generate report</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
