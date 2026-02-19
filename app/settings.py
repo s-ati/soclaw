@@ -1,18 +1,24 @@
+import os
 from pydantic import BaseModel
+
+
+def _env(key: str, default: str | None = None) -> str | None:
+    return os.environ.get(key, default)
 
 
 class Settings(BaseModel):
     app_name: str = "SpeedMatch MVP"
-    jwt_secret: str = "CHANGE_ME_SUPER_SECRET"  # change before deploying
+    jwt_secret: str = _env("SM_JWT_SECRET", "CHANGE_ME_SUPER_SECRET")
     jwt_algorithm: str = "HS256"
     jwt_exp_minutes: int = 60 * 24 * 7  # 7 days session
 
-    database_url: str = "sqlite:///./speedmatch.db"
+    database_url: str = _env("SM_DATABASE_URL", "sqlite:///./speedmatch.db")
 
-    # optional AI (stub-ready)
-    ai_enabled: bool = False
-    ai_provider: str = "none"
-    ai_api_key: str | None = None
+    # AI — set SM_AI_API_KEY env var to enable
+    ai_enabled: bool = bool(_env("SM_AI_API_KEY"))
+    ai_provider: str = _env("SM_AI_PROVIDER", "groq")
+    ai_api_key: str | None = _env("SM_AI_API_KEY")
+    ai_model: str = _env("SM_AI_MODEL", "llama-3.1-8b-instant")
     ai_timeout_seconds: int = 12
 
     retention_days: int = 30
