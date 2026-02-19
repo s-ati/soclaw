@@ -15,7 +15,7 @@ from .security import hash_password, verify_password, create_jwt
 from .auth import get_current_user
 from .parsing import pdf_to_text, safe_delete
 from .extraction import extract_structured
-from .scoring import compute_socawl, DEFAULT_WEIGHTS_CORP_INTERN
+from .scoring import compute_soclaw, DEFAULT_WEIGHTS_CORP_INTERN
 from .pdf_report import generate_pdf
 from .ai_client import AIClient
 from .seed import seed
@@ -278,7 +278,7 @@ def assess_job(
         "weights": job.weights or DEFAULT_WEIGHTS_CORP_INTERN
     }
     remote_only = bool(profile.extraction.get("remote_only", False))
-    res = compute_socawl(
+    res = compute_soclaw(
         extraction=profile.extraction,
         questionnaire=profile.questionnaire,
         linkedin_url=profile.linkedin_url,
@@ -288,7 +288,7 @@ def assess_job(
     )
 
     # Persist assessment + PDF
-    pdf_filename = f"speedmatch_report_{user.id}_{job.id}_{uuid.uuid4().hex}.pdf"
+    pdf_filename = f"soclaw_report_{user.id}_{job.id}_{uuid.uuid4().hex}.pdf"
     pdf_path = str(REPORTS_DIR / pdf_filename)
 
     # Ensure weights are available for the PDF

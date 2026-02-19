@@ -140,7 +140,7 @@ def deterministic_tailored_questions(top_risks: list[str], missing_must: list[st
     return qs[:3]
 
 
-def compute_socawl(
+def compute_soclaw(
     extraction: dict,
     questionnaire: dict,
     linkedin_url: str | None,

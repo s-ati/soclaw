@@ -41,7 +41,7 @@ def generate_pdf(
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # PAGE 1
-    elems.append(Paragraph("SpeedMatch — Corporate Internship Risk Assessment (SOCAWL)", h1))
+    elems.append(Paragraph("SOCLAW — Corporate Internship Risk Assessment", h1))
     elems.append(Spacer(1, 0.15*inch))
     elems.append(Paragraph(f"<b>Candidate:</b> {candidate_email}", normal))
     elems.append(Paragraph(f"<b>Role assessed:</b> {job['title']} — {job['company']}", normal))
@@ -71,9 +71,9 @@ def generate_pdf(
     elems.append(ListFlowable([ListItem(Paragraph(b, normal)) for b in bullets], bulletType="bullet"))
     elems.append(Spacer(1, 0.2*inch))
 
-    # SOCAWL table with fit, risk, and weights
-    elems.append(Paragraph("SOCAWL profile (fit, risk, weights)", h2))
-    mapping = [("S","Skill"),("O","Ownership"),("C","Context"),("A","Adaptability"),("W","Work style"),("L","Location")]
+    # SOCLAW table with fit, risk, and weights
+    elems.append(Paragraph("SOCLAW profile (fit, risk, weights)", h2))
+    mapping = [("S","Skill"),("O","Ownership"),("C","Context"),("L","Location"),("A","Adaptability"),("W","Work style")]
     table_data = [["Dimension", "Fit", "Risk", "Risk level", "Weight"]]
     for k, label in mapping:
         fit = round(float(fits[k]), 1)
@@ -103,7 +103,7 @@ def generate_pdf(
     # Disclaimers (corporate pilot)
     elems.append(Paragraph("Methodology and disclaimers", h2))
     disclaimers = [
-        "This report estimates forward-looking hiring risks using the SOCAWL framework (Skill, Ownership, Context, Adaptability, Work style, Location).",
+        "This report estimates forward-looking hiring risks using the SOCLAW framework (Skill, Ownership, Context, Location, Adaptability, Work style).",
         "Scores are normalized (0–100) and computed deterministically from (1) keyword-based document extraction and (2) an 8-question questionnaire.",
         "AI may optionally assist with wording and question tailoring; AI is not used to calculate match scores, weights, or hard-stop logic.",
         "This report does not replace human decision-making. Use it to guide structured interviewing and reduce avoidable screening mistakes.",

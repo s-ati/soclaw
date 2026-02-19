@@ -7,12 +7,12 @@ def _env(key: str, default: str | None = None) -> str | None:
 
 
 class Settings(BaseModel):
-    app_name: str = "SpeedMatch MVP"
+    app_name: str = "SOCLAW"
     jwt_secret: str = _env("SM_JWT_SECRET", "CHANGE_ME_SUPER_SECRET")
     jwt_algorithm: str = "HS256"
     jwt_exp_minutes: int = 60 * 24 * 7  # 7 days session
 
-    database_url: str = _env("SM_DATABASE_URL", "sqlite:///./speedmatch.db")
+    database_url: str = _env("SM_DATABASE_URL", "sqlite:///./soclaw.db")
 
     # AI — set SM_AI_API_KEY env var to enable
     ai_enabled: bool = bool(_env("SM_AI_API_KEY"))

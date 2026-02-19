@@ -8,10 +8,10 @@ from .scoring import DEFAULT_WEIGHTS_CORP_INTERN
 
 def seed(db: Session):
     # Admin user
-    admin = db.query(User).filter(User.email == "admin@speedmatch.local").first()
+    admin = db.query(User).filter(User.email == "admin@soclaw.local").first()
     if not admin:
         admin = User(
-            email="admin@speedmatch.local",
+            email="admin@soclaw.local",
             password_hash=hash_password("AdminPassword123!"),
             is_admin=True
         )
