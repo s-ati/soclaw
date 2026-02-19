@@ -72,7 +72,7 @@ def on_startup():
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
-    return RedirectResponse("/login")
+    return templates.TemplateResponse("landing.html", {"request": request})
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):

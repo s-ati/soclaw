@@ -1,25 +1,84 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Upload profile</h1>
-<form method="post" action="/profile/upload" enctype="multipart/form-data">
-  <label>CV PDF (required)</label>
-  <input type="file" name="cv_pdf" accept="application/pdf" required>
 
-  <label>LinkedIn PDF (optional)</label>
-  <input type="file" name="linkedin_pdf" accept="application/pdf">
+<!-- Page Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
+    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+    Upload Profile
+  </h1>
+  <p class="text-slate-500 mt-1">Upload your CV and optional LinkedIn data to begin matching.</p>
+</div>
 
-  <label>LinkedIn URL (optional; will appear on PDF)</label>
-  <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/...">
+<!-- Messages -->
+{% if message %}
+<div class="mb-6 bg-green-50 border border-green-200 rounded-xl px-5 py-4 flex items-center gap-3">
+  <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <p class="text-green-800 text-sm font-medium">{{ message }}</p>
+</div>
+{% endif %}
+{% if error %}
+<div class="mb-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-center gap-3">
+  <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <p class="text-red-800 text-sm font-medium">{{ error }}</p>
+</div>
+{% endif %}
 
-  <label>Remote-only? (if yes, onsite jobs will be capped)</label>
-  <select name="remote_only">
-    <option value="no">No</option>
-    <option value="yes">Yes</option>
-  </select>
+<!-- Upload Form -->
+<div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm max-w-2xl">
+  <form method="post" action="/profile/upload" enctype="multipart/form-data" class="space-y-6">
 
-  <button type="submit">Save profile</button>
-</form>
+    <!-- CV PDF -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        CV PDF <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <input type="file" name="cv_pdf" accept="application/pdf" required
+          class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl py-2 px-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+      </div>
+      <p class="text-xs text-slate-400 mt-1.5">Upload your CV in PDF format (required)</p>
+    </div>
 
-{% if message %}<p class="success">{{ message }}</p>{% endif %}
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <!-- LinkedIn PDF -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        LinkedIn PDF <span class="text-slate-400 font-normal">(optional)</span>
+      </label>
+      <input type="file" name="linkedin_pdf" accept="application/pdf"
+        class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 border border-slate-300 rounded-xl py-2 px-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+      <p class="text-xs text-slate-400 mt-1.5">Export your LinkedIn profile as PDF for richer data extraction</p>
+    </div>
+
+    <!-- LinkedIn URL -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        LinkedIn URL <span class="text-slate-400 font-normal">(optional; will appear on PDF)</span>
+      </label>
+      <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..."
+        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm">
+    </div>
+
+    <!-- Remote Only -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        Remote-only? <span class="text-slate-400 font-normal">(if yes, onsite jobs will be capped)</span>
+      </label>
+      <select name="remote_only"
+        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm appearance-none cursor-pointer">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+      </select>
+    </div>
+
+    <!-- Submit -->
+    <div class="pt-2">
+      <button type="submit"
+        class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 text-sm">
+        Save Profile
+      </button>
+    </div>
+  </form>
+</div>
+
 {% endblock %}

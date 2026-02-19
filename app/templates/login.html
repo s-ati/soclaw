@@ -1,16 +1,70 @@
 <!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Login</title><link rel="stylesheet" href="/static/style.css"></head>
-<body>
-<div class="container">
-  <h1>Login</h1>
-  <form method="post" action="/login">
-    <label>Email</label><input name="email" type="email" required>
-    <label>Password</label><input name="password" type="password" required>
-    <button type="submit">Login</button>
-  </form>
-  <p>No account? <a href="/register">Register</a></p>
-  {% if error %}<p class="error">{{ error }}</p>{% endif %}
-</div>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — SpeedMatch</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="font-sans antialiased min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4">
+
+  <!-- Background decoration -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="w-full max-w-md relative z-10">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center space-x-2">
+        <span class="text-amber-500 text-3xl">&#9889;</span>
+        <span class="text-white text-2xl font-bold tracking-tight">SpeedMatch</span>
+      </a>
+      <p class="text-blue-200 text-sm mt-2">Sign in to your account</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl">
+      <form method="post" action="/login" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-blue-100 mb-2">Email</label>
+          <input name="email" type="email" required
+            class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+            placeholder="you@example.com">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-blue-100 mb-2">Password</label>
+          <input name="password" type="password" required
+            class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+            placeholder="Enter your password">
+        </div>
+        <button type="submit"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/25">
+          Sign In
+        </button>
+      </form>
+
+      {% if error %}
+      <div class="mt-4 bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3 text-red-200 text-sm">
+        {{ error }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Register link -->
+    <p class="text-center mt-6 text-blue-200 text-sm">
+      Don't have an account?
+      <a href="/register" class="text-amber-400 hover:text-amber-300 font-semibold transition-colors">Create one free</a>
+    </p>
+  </div>
+
 </body>
 </html>

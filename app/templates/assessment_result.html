@@ -1,24 +1,91 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Assessment result</h1>
 
-<div class="card">
-  <p><b>Match Score:</b> {{ match_score }}%</p>
-  <p><b>Recommendation:</b> {{ recommendation }}</p>
-  {% if flags %}
-    <p><b>Flags:</b> {{ flags|join(", ") }}</p>
-  {% endif %}
-  <p><a href="/assessments/{{ assessment_id }}/pdf">Download PDF report</a></p>
+<!-- Page Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
+    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    Assessment Result
+  </h1>
 </div>
 
-<div class="card">
-  <h2>SOCAWL fits</h2>
-  <pre>{{ fits }}</pre>
+<!-- Score Card -->
+<div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm mb-6">
+  <div class="flex flex-col md:flex-row md:items-center gap-6">
+    <!-- Score Circle -->
+    <div class="flex-shrink-0 mx-auto md:mx-0">
+      <div class="w-28 h-28 rounded-full flex items-center justify-center border-4
+        {% if match_score >= 75 %}border-green-400 bg-green-50
+        {% elif match_score >= 60 %}border-blue-400 bg-blue-50
+        {% elif match_score >= 40 %}border-amber-400 bg-amber-50
+        {% else %}border-red-400 bg-red-50{% endif %}">
+        <div class="text-center">
+          <span class="text-3xl font-extrabold
+            {% if match_score >= 75 %}text-green-700
+            {% elif match_score >= 60 %}text-blue-700
+            {% elif match_score >= 40 %}text-amber-700
+            {% else %}text-red-700{% endif %}">{{ match_score }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="flex-1 text-center md:text-left">
+      <div class="mb-3">
+        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold
+          {% if recommendation == 'TOP CANDIDATE' %}bg-green-100 text-green-800
+          {% elif recommendation == 'SOLID FIT' %}bg-blue-100 text-blue-800
+          {% elif recommendation == 'RISK APPLICATION' %}bg-amber-100 text-amber-800
+          {% else %}bg-red-100 text-red-800{% endif %}">
+          {{ recommendation }}
+        </span>
+      </div>
+      {% if flags %}
+      <div class="mb-4">
+        <p class="text-slate-500 text-sm">
+          <span class="font-semibold text-slate-700">Flags:</span>
+          {% for flag in flags %}
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200 ml-1">{{ flag }}</span>
+          {% endfor %}
+        </p>
+      </div>
+      {% endif %}
+      <a href="/assessments/{{ assessment_id }}/pdf"
+        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-600/20 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Download PDF Report
+      </a>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-  <h2>SOCAWL risks</h2>
-  <pre>{{ risks }}</pre>
+<!-- SOCAWL Details -->
+<div class="grid md:grid-cols-2 gap-6">
+  <!-- Fits -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+      <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      SOCAWL Fits
+    </h2>
+    <pre class="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 font-mono overflow-auto border border-slate-100">{{ fits }}</pre>
+  </div>
+
+  <!-- Risks -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+      <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      SOCAWL Risks
+    </h2>
+    <pre class="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 font-mono overflow-auto border border-slate-100">{{ risks }}</pre>
+  </div>
+</div>
+
+<!-- Back to Jobs -->
+<div class="mt-8">
+  <a href="/jobs" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to Jobs
+  </a>
 </div>
 
 {% endblock %}

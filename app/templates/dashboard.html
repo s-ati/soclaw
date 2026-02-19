@@ -1,35 +1,130 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Dashboard</h1>
 
-<div class="card">
-  <h2>Status</h2>
-  <p><b>Profile:</b> {{ "Ready" if profile_ready else "Missing (upload CV)" }}</p>
-  <p><b>Questionnaire:</b> {{ "Completed" if questionnaire_ready else "Missing" }}</p>
+<!-- Page Header -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+  <p class="text-slate-500 mt-1">Welcome back. Here's your current status.</p>
 </div>
 
-<div class="card">
-  <h2>Next steps</h2>
-  <ol>
-    <li>Upload CV (and optionally LinkedIn PDF + LinkedIn URL)</li>
-    <li>Fill out the 8-question questionnaire</li>
-    <li>Go to Jobs → click "Test" to generate a 2-page report</li>
-  </ol>
+<!-- Status Cards -->
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+  <!-- Profile Status -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-start gap-4">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ 'bg-green-50' if profile_ready else 'bg-amber-50' }}">
+        {% if profile_ready %}
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {% else %}
+        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        {% endif %}
+      </div>
+      <div>
+        <h3 class="font-semibold text-slate-900">Profile</h3>
+        {% if profile_ready %}
+        <p class="text-green-600 text-sm font-medium mt-1">Ready</p>
+        {% else %}
+        <p class="text-amber-600 text-sm font-medium mt-1">Missing — upload your CV</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Questionnaire Status -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-start gap-4">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ 'bg-green-50' if questionnaire_ready else 'bg-amber-50' }}">
+        {% if questionnaire_ready %}
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {% else %}
+        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        {% endif %}
+      </div>
+      <div>
+        <h3 class="font-semibold text-slate-900">Questionnaire</h3>
+        {% if questionnaire_ready %}
+        <p class="text-green-600 text-sm font-medium mt-1">Completed</p>
+        {% else %}
+        <p class="text-amber-600 text-sm font-medium mt-1">Missing — fill out the questionnaire</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-  <h2>Recent reports</h2>
+<!-- Next Steps -->
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
+  <h2 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
+    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+    Next Steps
+  </h2>
+  <div class="grid sm:grid-cols-3 gap-4">
+    <a href="/profile/upload" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed {{ 'border-green-300 bg-green-50/50' if profile_ready else 'border-blue-300 bg-blue-50/50 hover:border-blue-400' }} transition-colors">
+      <div class="w-10 h-10 rounded-full {{ 'bg-green-100' if profile_ready else 'bg-blue-100' }} flex items-center justify-center mb-3">
+        <span class="text-lg font-bold {{ 'text-green-600' if profile_ready else 'text-blue-600' }}">1</span>
+      </div>
+      <span class="font-semibold text-sm text-slate-700">Upload CV</span>
+      <span class="text-xs text-slate-500 mt-1">{{ "Done" if profile_ready else "CV + LinkedIn" }}</span>
+    </a>
+    <a href="/profile/questionnaire" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed {{ 'border-green-300 bg-green-50/50' if questionnaire_ready else 'border-blue-300 bg-blue-50/50 hover:border-blue-400' }} transition-colors">
+      <div class="w-10 h-10 rounded-full {{ 'bg-green-100' if questionnaire_ready else 'bg-blue-100' }} flex items-center justify-center mb-3">
+        <span class="text-lg font-bold {{ 'text-green-600' if questionnaire_ready else 'text-blue-600' }}">2</span>
+      </div>
+      <span class="font-semibold text-sm text-slate-700">Fill Questionnaire</span>
+      <span class="text-xs text-slate-500 mt-1">{{ "Done" if questionnaire_ready else "8 questions" }}</span>
+    </a>
+    <a href="/jobs" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/50 hover:border-amber-400 transition-colors">
+      <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+        <span class="text-lg font-bold text-amber-600">3</span>
+      </div>
+      <span class="font-semibold text-sm text-slate-700">Test a Job</span>
+      <span class="text-xs text-slate-500 mt-1">Generate report</span>
+    </a>
+  </div>
+</div>
+
+<!-- Recent Reports -->
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+  <h2 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
+    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Recent Reports
+  </h2>
   {% if assessments %}
-    <ul>
-      {% for a in assessments %}
-        <li>
-          <b>{{ a.job_title }}</b> — {{ a.match_score }}% ({{ a.recommendation }})
-          — <a href="/assessments/{{ a.id }}/pdf">Download PDF</a>
-        </li>
-      {% endfor %}
-    </ul>
+  <div class="space-y-3">
+    {% for a in assessments %}
+    <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg
+          {% if a.match_score >= 75 %}bg-green-100 text-green-700
+          {% elif a.match_score >= 60 %}bg-blue-100 text-blue-700
+          {% elif a.match_score >= 40 %}bg-amber-100 text-amber-700
+          {% else %}bg-red-100 text-red-700{% endif %}">
+          {{ a.match_score }}%
+        </div>
+        <div>
+          <p class="font-semibold text-slate-900 text-sm">{{ a.job_title }}</p>
+          <p class="text-xs mt-0.5
+            {% if a.recommendation == 'TOP CANDIDATE' %}text-green-600
+            {% elif a.recommendation == 'SOLID FIT' %}text-blue-600
+            {% elif a.recommendation == 'RISK APPLICATION' %}text-amber-600
+            {% else %}text-red-600{% endif %}">
+            {{ a.recommendation }}
+          </p>
+        </div>
+      </div>
+      <a href="/assessments/{{ a.id }}/pdf" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        PDF
+      </a>
+    </div>
+    {% endfor %}
+  </div>
   {% else %}
-    <p>No assessments yet.</p>
+  <div class="text-center py-8">
+    <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    <p class="text-slate-400 text-sm">No assessments yet. Upload your CV and test a job to get started.</p>
+  </div>
   {% endif %}
 </div>
+
 {% endblock %}
