@@ -329,9 +329,10 @@ def assess_job(
     db.commit()
     db.refresh(assessment)
 
-    # Format fits/risks for display
-    fits_text = "\n".join(f"  {k}: {v:.1f}" for k, v in res.fits.items())
-    risks_text = "\n".join(f"  {k}: {v:.1f}" for k, v in res.risks.items())
+    # Format fits/risks for display with full SOCLAW dimension names
+    dim_names = {"S": "Skill", "O": "Ownership", "C": "Context", "L": "Location", "A": "Adaptability", "W": "Work style"}
+    fits_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in res.fits.items())
+    risks_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in res.risks.items())
 
     return templates.TemplateResponse("assessment_result.html", {
         "request": request,
