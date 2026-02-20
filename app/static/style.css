@@ -1,4 +1,5 @@
 /* SOCLAW — Premium Design System */
+/* Font: Plus Jakarta Sans — a modern geometric sans-serif */
 
 /* ── Foundation ──────────────────────────────────────────── */
 html {
@@ -10,6 +11,11 @@ html {
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium typography refinements for Plus Jakarta Sans */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
 }
 
 ::selection {

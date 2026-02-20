@@ -8,12 +8,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
           colors: {
             gold: { 400: '#f0d060', 500: '#d4af37', 600: '#c5a028', 700: '#a88b20' },
             navy: { 800: '#111d35', 900: '#0d1526', 950: '#0a0e1a' }
@@ -97,9 +97,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
       <div class="text-center max-w-5xl mx-auto">
         <!-- Badge -->
-        <div class="reveal inline-flex items-center gap-2 bg-white/[0.04] backdrop-blur-sm rounded-full px-5 py-2 mb-10 border border-white/[0.08]">
-          <div class="w-2 h-2 bg-gold-500 rounded-full animate-pulse"></div>
-          <span class="text-gold-500 text-xs font-semibold tracking-[0.15em] uppercase">AI-Powered Matching</span>
+        <div class="reveal inline-flex items-center gap-2.5 bg-white/[0.04] backdrop-blur-sm rounded-lg px-5 py-2.5 mb-10 border border-white/[0.08]">
+          <div class="w-1.5 h-4 bg-gold-500 rounded-sm"></div>
+          <span class="text-gold-500 text-xs font-semibold tracking-[0.15em] uppercase">Intelligent Talent Matching</span>
         </div>
 
         <!-- Headline -->
@@ -153,7 +153,7 @@
       <div class="grid md:grid-cols-3 gap-6 md:gap-8">
         <!-- Card 1 -->
         <div class="reveal delay-1 card-premium rounded-2xl p-8 md:p-10">
-          <div class="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/10 flex items-center justify-center mb-6">
             <svg class="w-7 h-7 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
           <h3 class="text-xl font-bold mb-3">No Exclusivity</h3>
@@ -162,7 +162,7 @@
 
         <!-- Card 2 -->
         <div class="reveal delay-2 card-premium rounded-2xl p-8 md:p-10">
-          <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center mb-6">
             <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           </div>
           <h3 class="text-xl font-bold mb-3">Total Transparency</h3>
@@ -171,7 +171,7 @@
 
         <!-- Card 3 -->
         <div class="reveal delay-3 card-premium rounded-2xl p-8 md:p-10">
-          <div class="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/10 flex items-center justify-center mb-6">
             <svg class="w-7 h-7 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           </div>
           <h3 class="text-xl font-bold mb-3">Results-Based</h3>
@@ -200,7 +200,7 @@
         <!-- S -->
         <div class="reveal delay-1 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">S</div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center text-xl font-extrabold text-blue-400 group-hover:bg-blue-500/20 transition-colors">S</div>
             <h3 class="text-lg font-bold">Skills</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">Technical and domain skill matching against job requirements with weighted must-have and nice-to-have criteria.</p>
@@ -208,7 +208,7 @@
         <!-- O -->
         <div class="reveal delay-2 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">O</div>
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 border border-gold-500/10 flex items-center justify-center text-xl font-extrabold text-gold-500 group-hover:bg-gold-500/20 transition-colors">O</div>
             <h3 class="text-lg font-bold">Ownership</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">Measures initiative-taking vs. dependence on guidance. Identifies candidates who drive outcomes independently.</p>
@@ -216,7 +216,7 @@
         <!-- C -->
         <div class="reveal delay-3 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">C</div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center text-xl font-extrabold text-blue-400 group-hover:bg-blue-500/20 transition-colors">C</div>
             <h3 class="text-lg font-bold">Context</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">Cultural and organizational context signals &mdash; corporate, startup, regulated, cross-functional environment fit.</p>
@@ -224,7 +224,7 @@
         <!-- L -->
         <div class="reveal delay-1 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">L</div>
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 border border-gold-500/10 flex items-center justify-center text-xl font-extrabold text-gold-500 group-hover:bg-gold-500/20 transition-colors">L</div>
             <h3 class="text-lg font-bold">Location</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">Onsite, hybrid, or remote compatibility. Hard-stop detection for location policy mismatches.</p>
@@ -232,7 +232,7 @@
         <!-- A -->
         <div class="reveal delay-2 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">A</div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/10 flex items-center justify-center text-xl font-extrabold text-blue-400 group-hover:bg-blue-500/20 transition-colors">A</div>
             <h3 class="text-lg font-bold">Adaptability</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">How candidates respond to change and feedback. Evaluates resilience and flexibility in dynamic environments.</p>
@@ -240,7 +240,7 @@
         <!-- W -->
         <div class="reveal delay-3 card-premium rounded-2xl p-7 group">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">W</div>
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 border border-gold-500/10 flex items-center justify-center text-xl font-extrabold text-gold-500 group-hover:bg-gold-500/20 transition-colors">W</div>
             <h3 class="text-lg font-bold">Work Style</h3>
           </div>
           <p class="text-white/40 text-sm leading-relaxed">Organizational discipline, communication proactivity, and structured work habits assessment.</p>
