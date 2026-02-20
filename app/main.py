@@ -93,7 +93,7 @@ def register_post(
     user = User(email=email_norm, password_hash=hash_password(password), is_admin=False)
     db.add(user)
     db.commit()
-    return RedirectResponse("/login", status_code=303)
+    return templates.TemplateResponse("register_success.html", {"request": request})
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
@@ -128,7 +128,7 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
     questionnaire_ready = bool(profile and profile.questionnaire and len(profile.questionnaire.keys()) == 8)
 
     assessments = db.query(Assessment).filter(Assessment.user_id == user.id).order_by(Assessment.created_at.desc()).limit(10).all()
-    # add job title info quickly
+    has_assessment = len(assessments) > 0
     out = []
     for a in assessments:
         j = db.query(Job).filter(Job.id == a.job_id).first()
@@ -136,14 +136,27 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
             "id": a.id,
             "match_score": a.match_score,
             "recommendation": a.recommendation,
-            "job_title": f"{j.title} — {j.company}" if j else f"Job #{a.job_id}"
+            "job_title": f"{j.title} — {j.company}" if j else f"Job #{a.job_id}",
+            "pdf_path": a.pdf_path,
         })
+
+    # Determine current step (1-5)
+    if not profile_ready:
+        current_step = 1
+    elif not questionnaire_ready:
+        current_step = 2
+    elif not has_assessment:
+        current_step = 3
+    else:
+        current_step = 5
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "profile_ready": profile_ready,
         "questionnaire_ready": questionnaire_ready,
-        "assessments": out
+        "has_assessment": has_assessment,
+        "current_step": current_step,
+        "assessments": out,
     })
 
 @app.get("/profile/upload", response_class=HTMLResponse)
@@ -156,6 +169,8 @@ def upload_post(
     cv_pdf: UploadFile = File(...),
     linkedin_pdf: UploadFile | None = File(None),
     linkedin_url: str | None = Form(None),
+    location: str | None = Form(None),
+    availability: str | None = Form(None),
     remote_only: str = Form("no"),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -199,13 +214,17 @@ def upload_post(
         created_at=utcnow(),
         expires_at=expires_in_days(settings.retention_days),
     )
-    # store remote-only in extraction metadata (structured safe)
+    # store metadata in extraction (structured safe)
     prof.extraction["remote_only"] = (remote_only == "yes")
+    if location and location.strip():
+        prof.extraction["location"] = location.strip()
+    if availability and availability.strip():
+        prof.extraction["availability"] = availability.strip()
 
     db.add(prof)
     db.commit()
 
-    return templates.TemplateResponse("upload_profile.html", {"request": request, "message": "Profile saved (PDFs deleted after scoring).", "error": None})
+    return RedirectResponse("/dashboard", status_code=303)
 
 @app.get("/profile/questionnaire", response_class=HTMLResponse)
 def questionnaire_page(request: Request, user: User = Depends(get_current_user)):
@@ -230,8 +249,7 @@ def questionnaire_post(
     profile.expires_at = expires_in_days(settings.retention_days)
     db.commit()
 
-    questions = [{"id": qid, "text": qtext} for qid, qtext in QUESTION_TEXTS]
-    return templates.TemplateResponse("questionnaire.html", {"request": request, "questions": questions, "message": "Questionnaire saved.", "error": None})
+    return RedirectResponse("/dashboard", status_code=303)
 
 @app.get("/jobs", response_class=HTMLResponse)
 def jobs_page(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -364,3 +382,24 @@ def download_pdf(
         media_type="application/pdf",
         filename=pdf_file.name,
     )
+
+@app.get("/apply/{assessment_id}", response_class=HTMLResponse)
+def apply_page(
+    request: Request,
+    assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    assessment = db.query(Assessment).filter(
+        Assessment.id == assessment_id,
+        Assessment.user_id == user.id,
+    ).first()
+    if not assessment:
+        return RedirectResponse("/dashboard", status_code=303)
+    job = db.query(Job).filter(Job.id == assessment.job_id).first()
+    return templates.TemplateResponse("apply.html", {
+        "request": request,
+        "assessment": assessment,
+        "job": job,
+        "user_email": user.email,
+    })

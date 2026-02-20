@@ -1,90 +1,153 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+  .fade-in-delay-1 { animation: fadeInUp 0.5s ease-out 0.1s forwards; opacity: 0; }
+  .fade-in-delay-2 { animation: fadeInUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+</style>
+
 <!-- Page Header -->
-<div class="mb-8">
+<div class="mb-8 fade-in">
   <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
-  <p class="text-slate-500 mt-1">Welcome back. Here's your current status.</p>
+  <p class="text-slate-500 mt-1">Follow the steps below to complete your profile and generate your report.</p>
 </div>
 
-<!-- Status Cards -->
-<div class="grid md:grid-cols-2 gap-6 mb-8">
-  <!-- Profile Status -->
-  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-    <div class="flex items-start gap-4">
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ 'bg-green-50' if profile_ready else 'bg-amber-50' }}">
-        {% if profile_ready %}
-        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        {% else %}
-        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-        {% endif %}
+<!-- Progress Stepper -->
+<div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm mb-8 fade-in-delay-1">
+  <h2 class="text-lg font-bold text-slate-900 mb-6">Your Progress</h2>
+
+  <!-- Horizontal Step Indicators (Desktop) -->
+  <div class="hidden md:flex items-center justify-between mb-8">
+    {% set steps = [
+      {"num": 1, "label": "Upload Data"},
+      {"num": 2, "label": "Questionnaire"},
+      {"num": 3, "label": "Select Job"},
+      {"num": 4, "label": "Generate Report"},
+      {"num": 5, "label": "Apply Now"}
+    ] %}
+    {% for step in steps %}
+    <div class="flex items-center {{ 'flex-1' if not loop.last else '' }}">
+      <div class="flex flex-col items-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all
+          {% if step.num < current_step %}bg-green-500 text-white
+          {% elif step.num == current_step %}bg-blue-600 text-white ring-4 ring-blue-100
+          {% else %}bg-slate-200 text-slate-400{% endif %}">
+          {% if step.num < current_step %}
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          {% else %}
+          {{ step.num }}
+          {% endif %}
+        </div>
+        <span class="text-xs font-medium mt-2 whitespace-nowrap
+          {% if step.num < current_step %}text-green-600
+          {% elif step.num == current_step %}text-blue-600
+          {% else %}text-slate-400{% endif %}">
+          {{ step.label }}
+        </span>
       </div>
-      <div>
-        <h3 class="font-semibold text-slate-900">Profile</h3>
-        {% if profile_ready %}
-        <p class="text-green-600 text-sm font-medium mt-1">Ready</p>
-        {% else %}
-        <p class="text-amber-600 text-sm font-medium mt-1">Missing — upload your CV</p>
-        {% endif %}
-      </div>
+      {% if not loop.last %}
+      <div class="flex-1 h-0.5 mx-3 mt-[-1rem]
+        {% if step.num < current_step %}bg-green-400
+        {% else %}bg-slate-200{% endif %}"></div>
+      {% endif %}
     </div>
+    {% endfor %}
   </div>
 
-  <!-- Questionnaire Status -->
-  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-    <div class="flex items-start gap-4">
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ 'bg-green-50' if questionnaire_ready else 'bg-amber-50' }}">
-        {% if questionnaire_ready %}
-        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <!-- Mobile Step Indicators -->
+  <div class="md:hidden space-y-3 mb-6">
+    {% set steps = [
+      {"num": 1, "label": "Upload Data"},
+      {"num": 2, "label": "Questionnaire"},
+      {"num": 3, "label": "Select Job"},
+      {"num": 4, "label": "Generate Report"},
+      {"num": 5, "label": "Apply Now"}
+    ] %}
+    {% for step in steps %}
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0
+        {% if step.num < current_step %}bg-green-500 text-white
+        {% elif step.num == current_step %}bg-blue-600 text-white ring-2 ring-blue-100
+        {% else %}bg-slate-200 text-slate-400{% endif %}">
+        {% if step.num < current_step %}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
         {% else %}
-        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        {{ step.num }}
         {% endif %}
       </div>
-      <div>
-        <h3 class="font-semibold text-slate-900">Questionnaire</h3>
-        {% if questionnaire_ready %}
-        <p class="text-green-600 text-sm font-medium mt-1">Completed</p>
-        {% else %}
-        <p class="text-amber-600 text-sm font-medium mt-1">Missing — fill out the questionnaire</p>
-        {% endif %}
-      </div>
+      <span class="text-sm font-medium
+        {% if step.num < current_step %}text-green-600
+        {% elif step.num == current_step %}text-blue-600
+        {% else %}text-slate-400{% endif %}">
+        {{ step.label }}
+      </span>
     </div>
+    {% endfor %}
   </div>
-</div>
 
-<!-- Next Steps -->
-<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
-  <h2 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
-    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-    Next Steps
-  </h2>
-  <div class="grid sm:grid-cols-3 gap-4">
-    <a href="/profile/upload" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed {{ 'border-green-300 bg-green-50/50' if profile_ready else 'border-blue-300 bg-blue-50/50 hover:border-blue-400' }} transition-colors">
-      <div class="w-10 h-10 rounded-full {{ 'bg-green-100' if profile_ready else 'bg-blue-100' }} flex items-center justify-center mb-3">
-        <span class="text-lg font-bold {{ 'text-green-600' if profile_ready else 'text-blue-600' }}">1</span>
-      </div>
-      <span class="font-semibold text-sm text-slate-700">Upload CV</span>
-      <span class="text-xs text-slate-500 mt-1">{{ "Done" if profile_ready else "CV + LinkedIn" }}</span>
+  <!-- Current Step Action Card -->
+  <div class="rounded-xl border-2 border-dashed p-6 text-center
+    {% if current_step == 5 %}border-green-300 bg-green-50/50
+    {% else %}border-blue-300 bg-blue-50/50{% endif %}">
+
+    {% if current_step == 1 %}
+    <div class="w-14 h-14 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+    </div>
+    <h3 class="font-bold text-slate-900 text-lg mb-2">Upload Your CV</h3>
+    <p class="text-slate-500 text-sm mb-5 max-w-md mx-auto">Upload your CV (PDF) and optional LinkedIn data to start the matching process.</p>
+    <a href="/profile/upload"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-600/20 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      Upload Data
     </a>
-    <a href="/profile/questionnaire" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed {{ 'border-green-300 bg-green-50/50' if questionnaire_ready else 'border-blue-300 bg-blue-50/50 hover:border-blue-400' }} transition-colors">
-      <div class="w-10 h-10 rounded-full {{ 'bg-green-100' if questionnaire_ready else 'bg-blue-100' }} flex items-center justify-center mb-3">
-        <span class="text-lg font-bold {{ 'text-green-600' if questionnaire_ready else 'text-blue-600' }}">2</span>
-      </div>
-      <span class="font-semibold text-sm text-slate-700">Fill Questionnaire</span>
-      <span class="text-xs text-slate-500 mt-1">{{ "Done" if questionnaire_ready else "8 questions" }}</span>
+
+    {% elif current_step == 2 %}
+    <div class="w-14 h-14 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    </div>
+    <h3 class="font-bold text-slate-900 text-lg mb-2">Complete the Questionnaire</h3>
+    <p class="text-slate-500 text-sm mb-5 max-w-md mx-auto">Answer 8 behavioral questions about your work style to refine your matching profile.</p>
+    <a href="/profile/questionnaire"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-600/20 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      Start Questionnaire
     </a>
-    <a href="/jobs" class="group flex flex-col items-center text-center p-5 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/50 hover:border-amber-400 transition-colors">
-      <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-        <span class="text-lg font-bold text-amber-600">3</span>
-      </div>
-      <span class="font-semibold text-sm text-slate-700">Test a Job</span>
-      <span class="text-xs text-slate-500 mt-1">Generate report</span>
+
+    {% elif current_step == 3 %}
+    <div class="w-14 h-14 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    </div>
+    <h3 class="font-bold text-slate-900 text-lg mb-2">Select a Job</h3>
+    <p class="text-slate-500 text-sm mb-5 max-w-md mx-auto">Browse available positions and select a job to generate your personalized assessment report.</p>
+    <a href="/jobs"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-600/20 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      Browse Jobs
     </a>
+
+    {% elif current_step >= 5 %}
+    <div class="w-14 h-14 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="font-bold text-green-700 text-lg mb-2">All Steps Complete!</h3>
+    <p class="text-slate-500 text-sm mb-5 max-w-md mx-auto">You have completed all steps. View your reports below, or generate a new one for another job.</p>
+    <a href="/jobs"
+      class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Test Another Job
+    </a>
+    {% endif %}
   </div>
 </div>
 
 <!-- Recent Reports -->
-<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm fade-in-delay-2">
   <h2 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
     <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
     Recent Reports
@@ -112,17 +175,22 @@
           </p>
         </div>
       </div>
-      <a href="/assessments/{{ a.id }}/pdf" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        PDF
-      </a>
+      <div class="flex items-center gap-3">
+        <a href="/assessments/{{ a.id }}/pdf" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          PDF
+        </a>
+        <a href="/apply/{{ a.id }}" class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-2 px-4 rounded-lg text-xs transition-all hover:scale-[1.02] active:scale-[0.98]">
+          Apply Now
+        </a>
+      </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
   <div class="text-center py-8">
     <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-    <p class="text-slate-400 text-sm">No assessments yet. Upload your CV and test a job to get started.</p>
+    <p class="text-slate-400 text-sm">No assessments yet. Complete the steps above to get started.</p>
   </div>
   {% endif %}
 </div>
