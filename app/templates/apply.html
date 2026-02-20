@@ -26,7 +26,7 @@
   <!-- Left: Summary + Report -->
   <div class="lg:col-span-2 space-y-6">
     <!-- Job & Score Summary -->
-    <div class="card-premium rounded-2xl p-6 apply-fade">
+    <div class="card-premium rounded-lg p-6 apply-fade">
       <h2 class="text-lg font-bold text-white mb-4">Application Summary</h2>
       <div class="space-y-3">
         <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
@@ -49,7 +49,7 @@
         </div>
         <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
           <span class="text-sm text-white/40">Recommendation</span>
-          <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold
+          <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold
             {% if assessment.recommendation == 'TOP CANDIDATE' %}bg-green-500/10 text-green-400 border border-green-500/20
             {% elif assessment.recommendation == 'SOLID FIT' %}bg-blue-500/10 text-blue-400 border border-blue-500/20
             {% elif assessment.recommendation == 'RISK APPLICATION' %}bg-gold-500/10 text-gold-400 border border-gold-500/20
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Attached Report -->
-    <div class="bg-gold-500/[0.06] border border-gold-500/20 rounded-xl px-5 py-4 flex items-center justify-between apply-delay">
+    <div class="bg-gold-500/[0.06] border border-gold-500/20 rounded-md px-5 py-4 flex items-center justify-between apply-delay">
       <div class="flex items-center gap-3">
         <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <div>
@@ -83,16 +83,16 @@
   <!-- Right: Cover Letter + Submit -->
   <div class="space-y-6">
     <!-- Cover Letter -->
-    <div class="card-premium rounded-2xl p-6 apply-delay">
+    <div class="card-premium rounded-lg p-6 apply-delay">
       <h2 class="text-lg font-bold text-white mb-4">Additional Message <span class="text-white/30 font-normal text-sm">(optional)</span></h2>
       <textarea id="cover-letter" rows="8" placeholder="Add a brief message or cover letter to accompany your application..."
-        class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm resize-none"></textarea>
+        class="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm resize-none"></textarea>
     </div>
 
     <!-- Submit Button -->
     <div class="apply-delay">
       <button onclick="submitApplication()" id="submit-btn"
-        class="w-full btn-gold py-4 rounded-xl text-sm flex items-center justify-center gap-2">
+        class="w-full btn-gold py-4 rounded-md text-sm flex items-center justify-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
         Submit Application
       </button>
@@ -100,13 +100,13 @@
 
     <!-- Success Message (hidden initially) -->
     <div id="success-msg" class="hidden">
-      <div class="card-premium rounded-2xl p-8 text-center border-gold-500/20">
-        <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 border border-gold-500/30" style="background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));">
+      <div class="card-premium rounded-lg p-8 text-center border-gold-500/20">
+        <div class="w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-4 border border-gold-500/30" style="background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));">
           <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
         </div>
         <h3 class="text-xl font-bold text-white mb-2">Application Submitted!</h3>
         <p class="text-white/40 text-sm mb-6 font-light">Your application for <span class="font-semibold text-white">{{ job.title if job else 'this position' }}</span> has been submitted with your SOCLAW report attached.</p>
-        <a href="/dashboard" class="btn-gold inline-flex items-center gap-2 py-3 px-6 rounded-xl text-sm">
+        <a href="/dashboard" class="btn-gold inline-flex items-center gap-2 py-3 px-6 rounded-md text-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           Back to Dashboard
         </a>

@@ -1,5 +1,5 @@
 /* SOCLAW — Premium Design System */
-/* Font: Plus Jakarta Sans — a modern geometric sans-serif */
+/* Font: Urbanist — a clean geometric sans-serif */
 
 /* ── Foundation ──────────────────────────────────────────── */
 html {
@@ -13,7 +13,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Premium typography refinements for Plus Jakarta Sans */
+/* Premium typography refinements for Urbanist */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
@@ -292,7 +292,7 @@ input[type="file"] { cursor: pointer; }
   justify-content: center;
   font-size: 1.25rem;
   font-weight: 800;
-  border-radius: 16px;
+  border-radius: 8px;
   position: relative;
 }
 
@@ -300,7 +300,7 @@ input[type="file"] { cursor: pointer; }
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 18px;
+  border-radius: 10px;
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(37, 99, 235, 0.3));
   z-index: -1;
 }

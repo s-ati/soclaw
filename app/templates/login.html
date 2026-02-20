@@ -7,11 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: { extend: {
-        fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
+        fontFamily: { sans: ['"Urbanist"', 'system-ui', 'sans-serif'] },
         colors: {
           gold: { 400: '#f0d060', 500: '#d4af37', 600: '#c5a028', 700: '#a88b20' },
           navy: { 800: '#111d35', 900: '#0d1526', 950: '#0a0e1a' }
@@ -56,27 +56,27 @@
     </div>
 
     <!-- Login Card -->
-    <div class="card-premium rounded-2xl p-8">
+    <div class="card-premium rounded-lg p-8">
       <form method="post" action="/login" class="space-y-5">
         <div>
           <label class="block text-sm font-medium text-white/60 mb-2">Email</label>
           <input name="email" type="email" required
-            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
             placeholder="you@example.com">
         </div>
         <div>
           <label class="block text-sm font-medium text-white/60 mb-2">Password</label>
           <input name="password" type="password" required
-            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
             placeholder="Enter your password">
         </div>
-        <button type="submit" class="w-full btn-gold py-3.5 rounded-xl text-sm">
+        <button type="submit" class="w-full btn-gold py-3.5 rounded-md text-sm">
           Sign In
         </button>
       </form>
 
       {% if error %}
-      <div class="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-300 text-sm">
+      <div class="mt-4 bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 text-red-300 text-sm">
         {{ error }}
       </div>
       {% endif %}
