@@ -6,63 +6,86 @@
   <title>Register — SOCLAW</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
-      theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } }
+      theme: { extend: {
+        fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        colors: {
+          gold: { 400: '#f0d060', 500: '#d4af37', 600: '#c5a028', 700: '#a88b20' },
+          navy: { 800: '#111d35', 900: '#0d1526', 950: '#0a0e1a' }
+        }
+      }}
     }
   </script>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="font-sans antialiased min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4">
+<body class="font-sans antialiased min-h-screen flex items-center justify-center px-4 hero-bg">
 
-  <!-- Background decoration -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-1/3 right-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-1/3 left-1/3 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+  <!-- Grid Overlay -->
+  <div class="hero-grid absolute inset-0 pointer-events-none"></div>
+
+  <!-- Ambient Glow -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/3 right-1/3 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-gold-500/5 rounded-full blur-[100px]"></div>
   </div>
 
   <div class="w-full max-w-md relative z-10">
     <!-- Logo -->
-    <div class="text-center mb-8">
-      <a href="/" class="inline-flex items-center space-x-2">
-        <span class="text-amber-500 text-3xl">&#9889;</span>
-        <span class="text-white text-2xl font-bold tracking-tight">SOCLAW</span>
+    <div class="text-center mb-10">
+      <a href="/" class="inline-flex items-center space-x-3">
+        <svg class="w-10 h-10 logo-glow" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="r-bolt" x1="10" y1="2" x2="30" y2="38" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#d4af37"/><stop offset="100%" stop-color="#a88b20"/>
+            </linearGradient>
+            <linearGradient id="r-ring" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#d4af37" stop-opacity="0.5"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <circle cx="20" cy="20" r="18" stroke="url(#r-ring)" stroke-width="1.5" fill="none"/>
+          <path d="M22.5 4L12 22h7.5L16 36l13-18h-8l1.5-14z" fill="url(#r-bolt)"/>
+        </svg>
+        <span class="text-xl font-bold tracking-tight">
+          <span class="text-white">SOC</span><span class="text-gradient-gold">LAW</span>
+        </span>
       </a>
-      <p class="text-blue-200 text-sm mt-2">Create your free account</p>
+      <p class="text-white/40 text-sm mt-3 font-light">Create your free account</p>
     </div>
 
     <!-- Register Card -->
-    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl">
+    <div class="card-premium rounded-2xl p-8">
       <form method="post" action="/register" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-blue-100 mb-2">Email</label>
+          <label class="block text-sm font-medium text-white/60 mb-2">Email</label>
           <input name="email" type="email" required
-            class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
             placeholder="you@example.com">
         </div>
         <div>
-          <label class="block text-sm font-medium text-blue-100 mb-2">Password (min 8 chars)</label>
+          <label class="block text-sm font-medium text-white/60 mb-2">Password (min 8 chars)</label>
           <input name="password" type="password" required
-            class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm"
             placeholder="Choose a strong password">
         </div>
-        <button type="submit"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/25">
+        <button type="submit" class="w-full btn-gold py-3.5 rounded-xl text-sm">
           Create Account
         </button>
       </form>
 
       {% if error %}
-      <div class="mt-4 bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3 text-red-200 text-sm">
+      <div class="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-300 text-sm">
         {{ error }}
       </div>
       {% endif %}
     </div>
 
     <!-- Login link -->
-    <p class="text-center mt-6 text-blue-200 text-sm">
+    <p class="text-center mt-8 text-white/30 text-sm">
       Already have an account?
-      <a href="/login" class="text-amber-400 hover:text-amber-300 font-semibold transition-colors">Sign in</a>
+      <a href="/login" class="text-gold-500 hover:text-gold-400 font-semibold transition-colors">Sign in</a>
     </p>
   </div>
 

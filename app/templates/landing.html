@@ -3,187 +3,400 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SOCLAW — Find Jobs That Truly Fit You</title>
+  <title>SOCLAW — Intelligent Talent Matching</title>
+  <meta name="description" content="SOCLAW uses a 6-dimension AI-powered framework to match candidates with jobs based on skills, ownership, context, location, adaptability, and work style.">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            gold: { 400: '#f0d060', 500: '#d4af37', 600: '#c5a028', 700: '#a88b20' },
+            navy: { 800: '#111d35', 900: '#0d1526', 950: '#0a0e1a' }
+          }
         }
       }
     }
   </script>
-  <style>
-    .hero-gradient { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e40af 100%); }
-    .gold-glow { box-shadow: 0 0 30px rgba(245, 158, 11, 0.3); }
-    .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .fade-in { animation: fadeIn 0.8s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="font-sans antialiased text-slate-800">
+<body class="font-sans antialiased bg-navy-950 text-white">
 
-  <!-- Navigation -->
-  <nav class="bg-slate-900/95 backdrop-blur-sm fixed w-full top-0 z-50 border-b border-slate-800">
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════ -->
+  <nav class="nav-premium fixed w-full top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="flex items-center space-x-2">
-          <span class="text-amber-500 text-2xl">&#9889;</span>
-          <span class="text-white text-xl font-bold tracking-tight">SOCLAW</span>
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo -->
+        <a href="/" class="flex items-center space-x-3 group">
+          <svg class="w-10 h-10 logo-glow" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bolt-grad" x1="10" y1="2" x2="30" y2="38" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#f0d060"/>
+                <stop offset="50%" stop-color="#d4af37"/>
+                <stop offset="100%" stop-color="#a88b20"/>
+              </linearGradient>
+              <linearGradient id="ring-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#d4af37" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#d4af37" stop-opacity="0.1"/>
+              </linearGradient>
+            </defs>
+            <circle cx="20" cy="20" r="18" stroke="url(#ring-grad)" stroke-width="1.5" fill="none"/>
+            <path d="M22.5 4L12 22h7.5L16 36l13-18h-8l1.5-14z" fill="url(#bolt-grad)"/>
+          </svg>
+          <span class="text-xl font-bold tracking-tight">
+            <span class="text-white">SOC</span><span class="text-gradient-gold">LAW</span>
+          </span>
         </a>
-        <div class="hidden md:flex items-center space-x-6">
-          <a href="#features" class="text-slate-300 hover:text-white transition-colors text-sm font-medium">Features</a>
-          <a href="#how-it-works" class="text-slate-300 hover:text-white transition-colors text-sm font-medium">How It Works</a>
-          <a href="/login" class="text-slate-300 hover:text-white transition-colors text-sm font-medium">Login</a>
-          <a href="/register" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2 rounded-lg transition-colors text-sm">Sign Up Free</a>
+
+        <!-- Desktop Nav Links -->
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="#methodology" class="nav-link-premium text-sm font-medium">Methodology</a>
+          <a href="#features" class="nav-link-premium text-sm font-medium">Features</a>
+          <a href="#how-it-works" class="nav-link-premium text-sm font-medium">How It Works</a>
+          <a href="/login" class="nav-link-premium text-sm font-medium">Login</a>
+          <a href="/register" class="btn-gold px-6 py-2.5 rounded-lg text-sm">Get Started</a>
         </div>
-        <button onclick="document.getElementById('mobile-nav').classList.toggle('hidden')" class="md:hidden text-white">
+
+        <!-- Mobile Menu Button -->
+        <button onclick="document.getElementById('mobile-nav').classList.toggle('hidden')" class="md:hidden text-white/70 hover:text-white p-2">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
-      <div id="mobile-nav" class="hidden md:hidden pb-4 space-y-2">
-        <a href="#features" class="block text-slate-300 hover:text-white py-2 text-sm">Features</a>
-        <a href="#how-it-works" class="block text-slate-300 hover:text-white py-2 text-sm">How It Works</a>
-        <a href="/login" class="block text-slate-300 hover:text-white py-2 text-sm">Login</a>
-        <a href="/register" class="block bg-amber-500 text-slate-900 font-semibold px-4 py-2 rounded-lg text-sm text-center">Sign Up Free</a>
+
+      <!-- Mobile Nav -->
+      <div id="mobile-nav" class="hidden md:hidden pb-6 space-y-2 border-t border-white/5 pt-4">
+        <a href="#methodology" class="block text-white/60 hover:text-gold-500 py-2.5 text-sm font-medium transition-colors">Methodology</a>
+        <a href="#features" class="block text-white/60 hover:text-gold-500 py-2.5 text-sm font-medium transition-colors">Features</a>
+        <a href="#how-it-works" class="block text-white/60 hover:text-gold-500 py-2.5 text-sm font-medium transition-colors">How It Works</a>
+        <a href="/login" class="block text-white/60 hover:text-gold-500 py-2.5 text-sm font-medium transition-colors">Login</a>
+        <a href="/register" class="block btn-gold px-5 py-3 rounded-lg text-sm text-center mt-3">Get Started</a>
       </div>
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <section class="hero-gradient pt-32 pb-24 md:pt-40 md:pb-32 relative overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute top-20 left-10 w-72 h-72 bg-amber-500 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+  <!-- ═══════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════ -->
+  <section class="hero-bg min-h-screen flex items-center relative">
+    <!-- Grid Pattern Overlay -->
+    <div class="hero-grid absolute inset-0 pointer-events-none"></div>
+
+    <!-- Ambient Glow Effects -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]"></div>
+      <div class="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] bg-gold-500/5 rounded-full blur-[100px]"></div>
+      <div class="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-blue-500/3 rounded-full blur-[80px]"></div>
     </div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="text-center max-w-4xl mx-auto fade-in">
-        <div class="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-8 border border-white/20">
-          <span class="text-amber-400 text-xs font-semibold tracking-wider uppercase">AI-Powered Matching</span>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
+      <div class="text-center max-w-5xl mx-auto">
+        <!-- Badge -->
+        <div class="reveal inline-flex items-center gap-2 bg-white/[0.04] backdrop-blur-sm rounded-full px-5 py-2 mb-10 border border-white/[0.08]">
+          <div class="w-2 h-2 bg-gold-500 rounded-full animate-pulse"></div>
+          <span class="text-gold-500 text-xs font-semibold tracking-[0.15em] uppercase">AI-Powered Matching</span>
         </div>
-        <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
-          Find jobs that<br>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">truly fit you.</span>
+
+        <!-- Headline -->
+        <h1 class="reveal delay-1 hero-title text-5xl md:text-6xl lg:text-7xl font-black leading-[1.08] mb-8 tracking-tight">
+          Intelligent talent matching,<br>
+          <span class="text-gradient-gold">by the numbers.</span>
         </h1>
-        <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-          SOCLAW helps you match with teams based on your skills and personality — evaluating ownership, adaptability, work style, and cultural context for precise matching.
+
+        <!-- Subtitle -->
+        <p class="reveal delay-2 text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+          SOCLAW evaluates candidates across 6 dimensions &mdash; Skills, Ownership, Context, Location, Adaptability, and Work style &mdash; for precise job matching.
         </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="/register" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-8 py-4 rounded-xl transition-all text-lg gold-glow hover:scale-105">
-            Get Started with SOCLAW
+
+        <!-- CTA Buttons -->
+        <div class="reveal delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/register" class="btn-gold px-10 py-4 rounded-xl text-base tracking-wide w-full sm:w-auto text-center">
+            I'm looking for a job
           </a>
-          <a href="#features" class="border-2 border-white/30 hover:border-white/60 text-white font-semibold px-8 py-4 rounded-xl transition-all text-lg hover:bg-white/10">
-            Learn More
+          <a href="/register" class="btn-outline px-10 py-4 rounded-xl text-base tracking-wide w-full sm:w-auto text-center">
+            I'm looking for talent
+          </a>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="reveal delay-5 mt-20 mb-8">
+          <a href="#methodology" class="inline-flex flex-col items-center gap-2 text-white/20 hover:text-white/40 transition-colors">
+            <span class="text-xs tracking-[0.2em] uppercase">Scroll</span>
+            <svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
           </a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Features Section -->
-  <section id="features" class="py-20 md:py-28 bg-white">
+  <!-- Divider -->
+  <div class="hr-gold"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       METHODOLOGY SECTION
+       ═══════════════════════════════════════════════════════ -->
+  <section id="methodology" class="section-darker py-24 md:py-32">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
       <div class="text-center mb-16">
-        <span class="text-amber-500 font-semibold text-sm tracking-wider uppercase">Why SOCLAW</span>
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3">A smarter way to match talent</h2>
-        <p class="text-slate-500 mt-4 max-w-2xl mx-auto text-lg">Go beyond CV screening. Our 6-dimension SOCLAW model provides a holistic view of candidate-job fit.</p>
+        <span class="reveal text-gold-500 text-xs font-semibold tracking-[0.2em] uppercase">Our Approach</span>
+        <h2 class="reveal delay-1 text-3xl md:text-5xl font-bold mt-4 tracking-tight">Built on transparency<br class="hidden md:inline"> and precision.</h2>
+        <p class="reveal delay-2 text-white/40 mt-5 max-w-2xl mx-auto text-lg font-light">We believe great hiring is about more than CVs. Our methodology measures what truly matters.</p>
       </div>
-      <div class="grid md:grid-cols-3 gap-8">
+
+      <!-- Methodology Cards -->
+      <div class="grid md:grid-cols-3 gap-6 md:gap-8">
         <!-- Card 1 -->
-        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8 text-center">
-          <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <div class="reveal delay-1 card-premium rounded-2xl p-8 md:p-10">
+          <div class="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">Precise Team Fit Matching</h3>
-          <p class="text-slate-500 leading-relaxed">6-dimension SOCLAW scoring analyzes skills, ownership, context, adaptability, work style, and location fit simultaneously.</p>
+          <h3 class="text-xl font-bold mb-3">No Exclusivity</h3>
+          <p class="text-white/40 leading-relaxed text-sm">We don't lock you in. Test our platform freely, compare results, and decide with full autonomy. Your data, your choice.</p>
         </div>
+
         <!-- Card 2 -->
-        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8 text-center">
-          <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <div class="reveal delay-2 card-premium rounded-2xl p-8 md:p-10">
+          <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">CV & LinkedIn Integration</h3>
-          <p class="text-slate-500 leading-relaxed">Upload your CV and LinkedIn profile. Our system extracts skills, courses, and project experience automatically.</p>
+          <h3 class="text-xl font-bold mb-3">Total Transparency</h3>
+          <p class="text-white/40 leading-relaxed text-sm">Every score is explainable. See exactly how each dimension is calculated, what drives risk flags, and why a match works &mdash; or doesn't.</p>
         </div>
+
         <!-- Card 3 -->
-        <div class="card-hover bg-white border border-slate-200 rounded-2xl p-8 text-center">
-          <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="reveal delay-3 card-premium rounded-2xl p-8 md:p-10">
+          <div class="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">Save Time, Better Match</h3>
-          <p class="text-slate-500 leading-relaxed">Get a professional 2-page PDF report with risk assessment and tailored interview questions in seconds.</p>
+          <h3 class="text-xl font-bold mb-3">Results-Based</h3>
+          <p class="text-white/40 leading-relaxed text-sm">Our scoring algorithm is deterministic and consistent. The same inputs always produce the same outputs &mdash; no black box, no guesswork.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How It Works -->
-  <section id="how-it-works" class="py-20 md:py-28 bg-slate-50">
+  <!-- Divider -->
+  <div class="hr-gold"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FEATURES / SOCLAW MODEL
+       ═══════════════════════════════════════════════════════ -->
+  <section id="features" class="section-dark py-24 md:py-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <span class="reveal text-gold-500 text-xs font-semibold tracking-[0.2em] uppercase">The SOCLAW Framework</span>
+        <h2 class="reveal delay-1 text-3xl md:text-5xl font-bold mt-4 tracking-tight">6 dimensions that<br class="hidden md:inline"> define a perfect match.</h2>
+      </div>
+
+      <!-- SOCLAW Grid -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- S -->
+        <div class="reveal delay-1 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">S</div>
+            <h3 class="text-lg font-bold">Skills</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">Technical and domain skill matching against job requirements with weighted must-have and nice-to-have criteria.</p>
+        </div>
+        <!-- O -->
+        <div class="reveal delay-2 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">O</div>
+            <h3 class="text-lg font-bold">Ownership</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">Measures initiative-taking vs. dependence on guidance. Identifies candidates who drive outcomes independently.</p>
+        </div>
+        <!-- C -->
+        <div class="reveal delay-3 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">C</div>
+            <h3 class="text-lg font-bold">Context</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">Cultural and organizational context signals &mdash; corporate, startup, regulated, cross-functional environment fit.</p>
+        </div>
+        <!-- L -->
+        <div class="reveal delay-1 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">L</div>
+            <h3 class="text-lg font-bold">Location</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">Onsite, hybrid, or remote compatibility. Hard-stop detection for location policy mismatches.</p>
+        </div>
+        <!-- A -->
+        <div class="reveal delay-2 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl font-black text-blue-400 group-hover:bg-blue-500/20 transition-colors">A</div>
+            <h3 class="text-lg font-bold">Adaptability</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">How candidates respond to change and feedback. Evaluates resilience and flexibility in dynamic environments.</p>
+        </div>
+        <!-- W -->
+        <div class="reveal delay-3 card-premium rounded-2xl p-7 group">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-xl font-black text-gold-500 group-hover:bg-gold-500/20 transition-colors">W</div>
+            <h3 class="text-lg font-bold">Work Style</h3>
+          </div>
+          <p class="text-white/40 text-sm leading-relaxed">Organizational discipline, communication proactivity, and structured work habits assessment.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div class="hr-gold"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       HOW IT WORKS
+       ═══════════════════════════════════════════════════════ -->
+  <section id="how-it-works" class="section-darker py-24 md:py-32">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <span class="text-amber-500 font-semibold text-sm tracking-wider uppercase">Simple Process</span>
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3">How it works</h2>
+        <span class="reveal text-gold-500 text-xs font-semibold tracking-[0.2em] uppercase">Simple Process</span>
+        <h2 class="reveal delay-1 text-3xl md:text-5xl font-bold mt-4 tracking-tight">Four steps to your<br class="hidden md:inline"> perfect match.</h2>
       </div>
-      <div class="grid md:grid-cols-4 gap-8">
-        <div class="text-center">
-          <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-bold">1</div>
-          <h3 class="font-bold text-slate-900 mb-2">Create Account</h3>
-          <p class="text-slate-500 text-sm">Sign up in seconds with just your email.</p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Step 1 -->
+        <div class="reveal delay-1 text-center group">
+          <div class="step-number bg-navy-800 text-gold-500 mx-auto mb-6 group-hover:bg-gold-500/10 transition-colors">01</div>
+          <h3 class="font-bold text-lg mb-2">Create Account</h3>
+          <p class="text-white/40 text-sm leading-relaxed">Sign up in seconds with just your email address.</p>
         </div>
-        <div class="text-center">
-          <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-bold">2</div>
-          <h3 class="font-bold text-slate-900 mb-2">Upload CV</h3>
-          <p class="text-slate-500 text-sm">Upload your CV and optionally your LinkedIn profile.</p>
+        <!-- Step 2 -->
+        <div class="reveal delay-2 text-center group">
+          <div class="step-number bg-navy-800 text-blue-400 mx-auto mb-6 group-hover:bg-blue-500/10 transition-colors">02</div>
+          <h3 class="font-bold text-lg mb-2">Upload Your CV</h3>
+          <p class="text-white/40 text-sm leading-relaxed">Upload your CV and optionally your LinkedIn profile as PDF.</p>
         </div>
-        <div class="text-center">
-          <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-bold">3</div>
-          <h3 class="font-bold text-slate-900 mb-2">Fill Questionnaire</h3>
-          <p class="text-slate-500 text-sm">Answer 8 quick behavioral questions.</p>
+        <!-- Step 3 -->
+        <div class="reveal delay-3 text-center group">
+          <div class="step-number bg-navy-800 text-gold-500 mx-auto mb-6 group-hover:bg-gold-500/10 transition-colors">03</div>
+          <h3 class="font-bold text-lg mb-2">8-Question Profile</h3>
+          <p class="text-white/40 text-sm leading-relaxed">Answer 8 behavioral questions about your work style and preferences.</p>
         </div>
-        <div class="text-center">
-          <div class="w-14 h-14 bg-amber-500 text-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-bold">4</div>
-          <h3 class="font-bold text-slate-900 mb-2">Get Your Report</h3>
-          <p class="text-slate-500 text-sm">Download a professional 2-page PDF assessment.</p>
+        <!-- Step 4 -->
+        <div class="reveal delay-4 text-center group">
+          <div class="step-number bg-navy-800 text-blue-400 mx-auto mb-6 group-hover:bg-blue-500/10 transition-colors">04</div>
+          <h3 class="font-bold text-lg mb-2">Get Your Report</h3>
+          <p class="text-white/40 text-sm leading-relaxed">Receive a professional 2-page PDF assessment with match score and interview guide.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA Section -->
-  <section class="py-20 md:py-28 bg-gradient-to-r from-slate-900 to-blue-900 relative overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute top-10 right-20 w-64 h-64 bg-amber-500 rounded-full blur-3xl"></div>
+  <!-- Divider -->
+  <div class="hr-gold"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CTA SECTION
+       ═══════════════════════════════════════════════════════ -->
+  <section class="section-gradient py-24 md:py-32 relative">
+    <!-- Ambient Glow -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/[0.03] rounded-full blur-[120px]"></div>
     </div>
+
     <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
-      <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Ready to find your perfect match?</h2>
-      <p class="text-blue-200 text-lg mb-10 max-w-2xl mx-auto">Join SOCLAW today and discover jobs that align with your skills, work style, and career goals.</p>
-      <a href="/register" class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-10 py-4 rounded-xl transition-all text-lg gold-glow hover:scale-105">
-        Get Started — It's Free
-      </a>
+      <div class="reveal">
+        <!-- Logo Mark -->
+        <svg class="w-16 h-16 mx-auto mb-8 logo-glow" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="18" stroke="url(#bolt-grad2)" stroke-width="1" fill="none" opacity="0.4"/>
+          <path d="M22.5 4L12 22h7.5L16 36l13-18h-8l1.5-14z" fill="url(#bolt-grad2)"/>
+          <defs>
+            <linearGradient id="bolt-grad2" x1="10" y1="2" x2="30" y2="38" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#f0d060"/>
+              <stop offset="100%" stop-color="#d4af37"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <h2 class="reveal delay-1 text-3xl md:text-5xl font-bold mb-6 tracking-tight">Ready to find your<br><span class="text-gradient-gold">perfect match?</span></h2>
+      <p class="reveal delay-2 text-white/40 text-lg mb-10 max-w-2xl mx-auto font-light">Join SOCLAW and discover jobs that align with your skills, work style, and career goals &mdash; backed by data, not guesswork.</p>
+
+      <div class="reveal delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/register" class="btn-gold px-10 py-4 rounded-xl text-base tracking-wide w-full sm:w-auto text-center">
+          Get Started &mdash; It's Free
+        </a>
+        <a href="/login" class="btn-outline px-10 py-4 rounded-xl text-base tracking-wide w-full sm:w-auto text-center">
+          Sign In
+        </a>
+      </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-slate-900 border-t border-slate-800 py-12">
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════ -->
+  <footer class="footer-premium py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center space-x-2">
-          <span class="text-amber-500 text-xl">&#9889;</span>
-          <span class="text-white font-bold text-lg">SOCLAW</span>
+      <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <svg class="w-8 h-8" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" stroke="rgba(212,175,55,0.3)" stroke-width="1" fill="none"/>
+            <path d="M22.5 4L12 22h7.5L16 36l13-18h-8l1.5-14z" fill="rgba(212,175,55,0.6)"/>
+          </svg>
+          <span class="text-white/60 font-semibold text-sm">SOCLAW</span>
         </div>
-        <div class="flex items-center space-x-6 text-sm">
-          <a href="#" class="text-slate-400 hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" class="text-slate-400 hover:text-white transition-colors">Terms of Service</a>
-          <a href="#" class="text-slate-400 hover:text-white transition-colors">Contact</a>
+
+        <!-- Links -->
+        <div class="flex items-center gap-8 text-sm">
+          <a href="#" class="text-white/30 hover:text-gold-500 transition-colors">Privacy</a>
+          <a href="#" class="text-white/30 hover:text-gold-500 transition-colors">Terms</a>
+          <a href="#" class="text-white/30 hover:text-gold-500 transition-colors">Contact</a>
+          <a href="#" class="text-white/30 hover:text-gold-500 transition-colors" aria-label="LinkedIn">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
         </div>
-        <p class="text-slate-500 text-sm">&copy; 2026 SOCLAW. All rights reserved.</p>
+
+        <!-- Copyright -->
+        <p class="text-white/20 text-sm">&copy; 2026 SOCLAW. All rights reserved.</p>
       </div>
     </div>
   </footer>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCROLL REVEAL SCRIPT
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+    // Intersection Observer for scroll-triggered animations
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(function(el) {
+        observer.observe(el);
+      });
+
+      // Parallax effect on hero section
+      var hero = document.querySelector('.hero-bg');
+      if (hero) {
+        window.addEventListener('scroll', function() {
+          var scrolled = window.pageYOffset;
+          var heroHeight = hero.offsetHeight;
+          if (scrolled < heroHeight) {
+            var grid = hero.querySelector('.hero-grid');
+            if (grid) {
+              grid.style.transform = 'translateY(' + (scrolled * 0.3) + 'px)';
+            }
+          }
+        }, { passive: true });
+      }
+    })();
+  </script>
 
 </body>
 </html>
