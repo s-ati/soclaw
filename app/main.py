@@ -236,16 +236,22 @@ def questionnaire_post(
     request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    Q1: int = Form(...), Q2: int = Form(...), Q3: int = Form(...), Q4: int = Form(...),
-    Q5: int = Form(...), Q6: int = Form(...), Q7: int = Form(...), Q8: int = Form(...),
+    Q1: int | None = Form(None), Q2: int | None = Form(None),
+    Q3: int | None = Form(None), Q4: int | None = Form(None),
+    Q5: int | None = Form(None), Q6: int | None = Form(None),
+    Q7: int | None = Form(None), Q8: int | None = Form(None),
 ):
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).order_by(CandidateProfile.created_at.desc()).first()
+    questions = [{"id": qid, "text": qtext} for qid, qtext in QUESTION_TEXTS]
     if not profile:
-        questions = [{"id": qid, "text": qtext} for qid, qtext in QUESTION_TEXTS]
         return templates.TemplateResponse("questionnaire.html", {"request": request, "questions": questions, "message": None, "error": "Upload your CV first."})
 
-    questionnaire = {"Q1":Q1,"Q2":Q2,"Q3":Q3,"Q4":Q4,"Q5":Q5,"Q6":Q6,"Q7":Q7,"Q8":Q8}
-    profile.questionnaire = questionnaire
+    vals = {"Q1":Q1,"Q2":Q2,"Q3":Q3,"Q4":Q4,"Q5":Q5,"Q6":Q6,"Q7":Q7,"Q8":Q8}
+    missing = [k for k, v in vals.items() if v is None]
+    if missing:
+        return templates.TemplateResponse("questionnaire.html", {"request": request, "questions": questions, "message": None, "error": f"Please answer all questions. Missing: {', '.join(missing)}"})
+
+    profile.questionnaire = vals
     profile.expires_at = expires_in_days(settings.retention_days)
     db.commit()
 

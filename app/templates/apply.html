@@ -12,106 +12,112 @@
 
 <!-- Page Header -->
 <div class="mb-8 apply-fade">
-  <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
-    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+  <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+    <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
     Apply for Position
   </h1>
   {% if job %}
-  <p class="text-slate-500 mt-1">Submit your application for <span class="font-semibold text-slate-700">{{ job.title }}</span> at <span class="font-semibold text-blue-600">{{ job.company }}</span>.</p>
+  <p class="text-white/40 mt-1 font-light">Submit your application for <span class="font-semibold text-white">{{ job.title }}</span> at <span class="font-semibold text-gold-500">{{ job.company }}</span>.</p>
   {% endif %}
 </div>
 
-<!-- Application Summary -->
-<div class="max-w-2xl">
-  <!-- Job & Score Summary -->
-  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6 apply-fade">
-    <h2 class="text-lg font-bold text-slate-900 mb-4">Application Summary</h2>
-    <div class="space-y-3">
-      <div class="flex items-center justify-between py-2 border-b border-slate-100">
-        <span class="text-sm text-slate-500">Position</span>
-        <span class="text-sm font-semibold text-slate-900">{{ job.title if job else 'N/A' }}</span>
-      </div>
-      <div class="flex items-center justify-between py-2 border-b border-slate-100">
-        <span class="text-sm text-slate-500">Company</span>
-        <span class="text-sm font-semibold text-blue-600">{{ job.company if job else 'N/A' }}</span>
-      </div>
-      <div class="flex items-center justify-between py-2 border-b border-slate-100">
-        <span class="text-sm text-slate-500">Match Score</span>
-        <span class="text-sm font-bold
-          {% if assessment.match_score >= 75 %}text-green-600
-          {% elif assessment.match_score >= 60 %}text-blue-600
-          {% elif assessment.match_score >= 40 %}text-amber-600
-          {% else %}text-red-600{% endif %}">
-          {{ assessment.match_score }}%
-        </span>
-      </div>
-      <div class="flex items-center justify-between py-2 border-b border-slate-100">
-        <span class="text-sm text-slate-500">Recommendation</span>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-          {% if assessment.recommendation == 'TOP CANDIDATE' %}bg-green-100 text-green-800
-          {% elif assessment.recommendation == 'SOLID FIT' %}bg-blue-100 text-blue-800
-          {% elif assessment.recommendation == 'RISK APPLICATION' %}bg-amber-100 text-amber-800
-          {% else %}bg-red-100 text-red-800{% endif %}">
-          {{ assessment.recommendation }}
-        </span>
-      </div>
-      <div class="flex items-center justify-between py-2">
-        <span class="text-sm text-slate-500">Applicant</span>
-        <span class="text-sm font-medium text-slate-700">{{ user_email }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Attached Report -->
-  <div class="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 flex items-center justify-between mb-6 apply-delay">
-    <div class="flex items-center gap-3">
-      <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      <div>
-        <p class="text-sm font-semibold text-blue-900">SOCLAW Assessment Report</p>
-        <p class="text-xs text-blue-600">PDF attached to your application</p>
+<!-- Application Content (FULL WIDTH) -->
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- Left: Summary + Report -->
+  <div class="lg:col-span-2 space-y-6">
+    <!-- Job & Score Summary -->
+    <div class="card-premium rounded-2xl p-6 apply-fade">
+      <h2 class="text-lg font-bold text-white mb-4">Application Summary</h2>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
+          <span class="text-sm text-white/40">Position</span>
+          <span class="text-sm font-semibold text-white">{{ job.title if job else 'N/A' }}</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
+          <span class="text-sm text-white/40">Company</span>
+          <span class="text-sm font-semibold text-gold-500">{{ job.company if job else 'N/A' }}</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
+          <span class="text-sm text-white/40">Match Score</span>
+          <span class="text-sm font-bold
+            {% if assessment.match_score >= 75 %}text-green-400
+            {% elif assessment.match_score >= 60 %}text-blue-400
+            {% elif assessment.match_score >= 40 %}text-gold-400
+            {% else %}text-red-400{% endif %}">
+            {{ assessment.match_score }}%
+          </span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-white/[0.06]">
+          <span class="text-sm text-white/40">Recommendation</span>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
+            {% if assessment.recommendation == 'TOP CANDIDATE' %}bg-green-500/10 text-green-400 border border-green-500/20
+            {% elif assessment.recommendation == 'SOLID FIT' %}bg-blue-500/10 text-blue-400 border border-blue-500/20
+            {% elif assessment.recommendation == 'RISK APPLICATION' %}bg-gold-500/10 text-gold-400 border border-gold-500/20
+            {% else %}bg-red-500/10 text-red-400 border border-red-500/20{% endif %}">
+            {{ assessment.recommendation }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between py-2">
+          <span class="text-sm text-white/40">Applicant</span>
+          <span class="text-sm font-medium text-white/60">{{ user_email }}</span>
+        </div>
       </div>
     </div>
-    <a href="/assessments/{{ assessment.id }}/pdf" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg>
-      Download
-    </a>
-  </div>
 
-  <!-- Cover Letter / Message -->
-  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6 apply-delay">
-    <h2 class="text-lg font-bold text-slate-900 mb-4">Additional Message <span class="text-slate-400 font-normal text-sm">(optional)</span></h2>
-    <textarea id="cover-letter" rows="5" placeholder="Add a brief message or cover letter to accompany your application..."
-      class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm resize-none"></textarea>
-  </div>
-
-  <!-- Submit Button -->
-  <div class="apply-delay">
-    <button onclick="submitApplication()" id="submit-btn"
-      class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-4 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-amber-500/25 text-sm flex items-center justify-center gap-2">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-      Submit Application
-    </button>
-  </div>
-
-  <!-- Success Message (hidden initially) -->
-  <div id="success-msg" class="hidden mt-6">
-    <div class="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
-      <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    <!-- Attached Report -->
+    <div class="bg-gold-500/[0.06] border border-gold-500/20 rounded-xl px-5 py-4 flex items-center justify-between apply-delay">
+      <div class="flex items-center gap-3">
+        <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <div>
+          <p class="text-sm font-semibold text-white">SOCLAW Assessment Report</p>
+          <p class="text-xs text-gold-500/60">PDF attached to your application</p>
+        </div>
       </div>
-      <h3 class="text-xl font-bold text-green-800 mb-2">Application Submitted!</h3>
-      <p class="text-green-700 text-sm mb-6">Your application for <span class="font-semibold">{{ job.title if job else 'this position' }}</span> has been submitted with your SOCLAW report attached.</p>
-      <a href="/dashboard" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] text-sm">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-        Back to Dashboard
+      <a href="/assessments/{{ assessment.id }}/pdf" class="inline-flex items-center gap-1.5 text-gold-500 hover:text-gold-400 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg>
+        Download
       </a>
+    </div>
+  </div>
+
+  <!-- Right: Cover Letter + Submit -->
+  <div class="space-y-6">
+    <!-- Cover Letter -->
+    <div class="card-premium rounded-2xl p-6 apply-delay">
+      <h2 class="text-lg font-bold text-white mb-4">Additional Message <span class="text-white/30 font-normal text-sm">(optional)</span></h2>
+      <textarea id="cover-letter" rows="8" placeholder="Add a brief message or cover letter to accompany your application..."
+        class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm resize-none"></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="apply-delay">
+      <button onclick="submitApplication()" id="submit-btn"
+        class="w-full btn-gold py-4 rounded-xl text-sm flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        Submit Application
+      </button>
+    </div>
+
+    <!-- Success Message (hidden initially) -->
+    <div id="success-msg" class="hidden">
+      <div class="card-premium rounded-2xl p-8 text-center border-gold-500/20">
+        <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 border-2 border-gold-500/40" style="background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05));">
+          <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Application Submitted!</h3>
+        <p class="text-white/40 text-sm mb-6 font-light">Your application for <span class="font-semibold text-white">{{ job.title if job else 'this position' }}</span> has been submitted with your SOCLAW report attached.</p>
+        <a href="/dashboard" class="btn-gold inline-flex items-center gap-2 py-3 px-6 rounded-xl text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Back to Dashboard
+        </a>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Navigation -->
-<div class="mt-8 max-w-2xl">
-  <a href="/assessments/{{ assessment.id }}/pdf" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors" id="back-link">
+<div class="mt-8" id="back-link">
+  <a href="/assessments/{{ assessment.id }}/pdf" class="inline-flex items-center gap-2 text-gold-500 hover:text-gold-400 font-medium text-sm transition-colors">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
     Back to Report
   </a>
@@ -122,10 +128,9 @@
     var btn = document.getElementById('submit-btn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Submitting...';
-    btn.classList.remove('hover:scale-[1.01]', 'hover:bg-amber-600');
     btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-    // Simulate submission (in production this would POST to a real endpoint)
+    // Simulate submission
     setTimeout(function() {
       btn.classList.add('hidden');
       document.getElementById('success-msg').classList.remove('hidden');

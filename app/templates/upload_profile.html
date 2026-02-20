@@ -12,110 +12,119 @@
 
 <!-- Page Header -->
 <div class="mb-8 upload-fade">
-  <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
-    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+  <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+    <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
     Upload Profile
   </h1>
-  <p class="text-slate-500 mt-1">Upload your CV and optional LinkedIn data to begin matching.</p>
+  <p class="text-white/40 mt-1 font-light">Upload your CV and optional LinkedIn data to begin matching.</p>
 </div>
 
 <!-- Error Message -->
 {% if error %}
-<div class="mb-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-center gap-3">
-  <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-  <p class="text-red-800 text-sm font-medium">{{ error }}</p>
+<div class="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 flex items-center gap-3">
+  <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <p class="text-red-300 text-sm font-medium">{{ error }}</p>
 </div>
 {% endif %}
 
-<!-- Upload Form -->
-<div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm max-w-2xl upload-delay">
-  <form id="upload-form" method="post" action="/profile/upload" enctype="multipart/form-data" class="space-y-6">
+<!-- Upload Form (FULL WIDTH) -->
+<div class="card-premium rounded-2xl p-6 md:p-8 upload-delay">
+  <form id="upload-form" method="post" action="/profile/upload" enctype="multipart/form-data">
 
-    <!-- CV PDF -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        CV PDF <span class="text-red-500">*</span>
-      </label>
-      <div id="cv-drop-zone" class="relative border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer">
-        <input type="file" name="cv_pdf" accept="application/pdf" required id="cv-input"
-          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onchange="handleFileSelect(this, 'cv-label')">
-        <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        <p id="cv-label" class="text-sm text-slate-500">
-          <span class="font-semibold text-blue-600">Click to upload</span> or drag and drop
-        </p>
-        <p class="text-xs text-slate-400 mt-1">PDF format only (required)</p>
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Left Column: File Uploads -->
+      <div class="space-y-6">
+        <!-- CV PDF -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            CV PDF <span class="text-red-400">*</span>
+          </label>
+          <div id="cv-drop-zone" class="relative border border-dashed border-white/[0.12] rounded-xl p-6 text-center hover:border-gold-500/40 hover:bg-gold-500/[0.03] transition-all cursor-pointer">
+            <input type="file" name="cv_pdf" accept="application/pdf" required id="cv-input"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onchange="handleFileSelect(this, 'cv-label')">
+            <svg class="w-10 h-10 text-white/10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <p id="cv-label" class="text-sm text-white/40">
+              <span class="font-semibold text-gold-500">Click to upload</span> or drag and drop
+            </p>
+            <p class="text-xs text-white/20 mt-1">PDF format only (required)</p>
+          </div>
+        </div>
+
+        <!-- LinkedIn PDF -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            LinkedIn PDF <span class="text-white/30 font-normal">(optional)</span>
+          </label>
+          <div class="relative border border-dashed border-white/[0.12] rounded-xl p-4 text-center hover:border-gold-500/40 hover:bg-gold-500/[0.03] transition-all cursor-pointer">
+            <input type="file" name="linkedin_pdf" accept="application/pdf" id="li-input"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onchange="handleFileSelect(this, 'li-label')">
+            <p id="li-label" class="text-sm text-white/40">
+              <span class="font-semibold text-gold-500">Upload LinkedIn PDF</span> (optional)
+            </p>
+          </div>
+        </div>
+
+        <!-- LinkedIn URL -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            LinkedIn URL <span class="text-white/30 font-normal">(optional; will appear on PDF)</span>
+          </label>
+          <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..."
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm">
+        </div>
+      </div>
+
+      <!-- Right Column: Details -->
+      <div class="space-y-6">
+        <!-- Location -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            Location <span class="text-white/30 font-normal">(optional)</span>
+          </label>
+          <input type="text" name="location" placeholder="e.g., Munich, Germany"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm">
+        </div>
+
+        <!-- Availability -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            Availability <span class="text-white/30 font-normal">(optional)</span>
+          </label>
+          <select name="availability"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm appearance-none cursor-pointer">
+            <option value="" class="bg-navy-950">Select availability</option>
+            <option value="immediate" class="bg-navy-950">Immediate</option>
+            <option value="2_weeks" class="bg-navy-950">Within 2 weeks</option>
+            <option value="1_month" class="bg-navy-950">Within 1 month</option>
+            <option value="3_months" class="bg-navy-950">Within 3 months</option>
+          </select>
+        </div>
+
+        <!-- Remote Only -->
+        <div>
+          <label class="block text-sm font-semibold text-white/70 mb-2">
+            Remote-only? <span class="text-white/30 font-normal">(if yes, onsite jobs will be capped)</span>
+          </label>
+          <select name="remote_only"
+            class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm appearance-none cursor-pointer">
+            <option value="no" class="bg-navy-950">No</option>
+            <option value="yes" class="bg-navy-950">Yes</option>
+          </select>
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-4">
+          <button type="submit" id="upload-btn"
+            class="w-full btn-gold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Save Profile
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- LinkedIn PDF -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        LinkedIn PDF <span class="text-slate-400 font-normal">(optional)</span>
-      </label>
-      <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer">
-        <input type="file" name="linkedin_pdf" accept="application/pdf" id="li-input"
-          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onchange="handleFileSelect(this, 'li-label')">
-        <p id="li-label" class="text-sm text-slate-500">
-          <span class="font-semibold text-blue-600">Upload LinkedIn PDF</span> (optional)
-        </p>
-      </div>
-    </div>
-
-    <!-- LinkedIn URL -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        LinkedIn URL <span class="text-slate-400 font-normal">(optional; will appear on PDF)</span>
-      </label>
-      <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..."
-        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm">
-    </div>
-
-    <!-- Location (optional) -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        Location <span class="text-slate-400 font-normal">(optional)</span>
-      </label>
-      <input type="text" name="location" placeholder="e.g., Munich, Germany"
-        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm">
-    </div>
-
-    <!-- Availability -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        Availability <span class="text-slate-400 font-normal">(optional)</span>
-      </label>
-      <select name="availability"
-        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm appearance-none cursor-pointer">
-        <option value="">Select availability</option>
-        <option value="immediate">Immediate</option>
-        <option value="2_weeks">Within 2 weeks</option>
-        <option value="1_month">Within 1 month</option>
-        <option value="3_months">Within 3 months</option>
-      </select>
-    </div>
-
-    <!-- Remote Only -->
-    <div>
-      <label class="block text-sm font-semibold text-slate-700 mb-2">
-        Remote-only? <span class="text-slate-400 font-normal">(if yes, onsite jobs will be capped)</span>
-      </label>
-      <select name="remote_only"
-        class="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm appearance-none cursor-pointer">
-        <option value="no">No</option>
-        <option value="yes">Yes</option>
-      </select>
-    </div>
-
-    <!-- Submit -->
-    <div class="pt-2">
-      <button type="submit" id="upload-btn"
-        class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 px-8 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 text-sm flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        Save Profile
-      </button>
-    </div>
   </form>
 </div>
 
@@ -125,18 +134,17 @@
     if (input.files.length > 0) {
       var file = input.files[0];
       if (file.type !== 'application/pdf') {
-        label.innerHTML = '<span class="text-red-600 font-semibold">Invalid file type</span> — Please select a PDF file';
+        label.innerHTML = '<span class="text-red-400 font-semibold">Invalid file type</span> — Please select a PDF file';
         input.value = '';
         return;
       }
       var sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      label.innerHTML = '<span class="text-green-600 font-semibold">' + file.name + '</span> <span class="text-slate-400">(' + sizeMB + ' MB)</span>';
-      input.closest('.border-dashed').classList.remove('border-slate-300');
-      input.closest('.border-dashed').classList.add('border-green-400', 'bg-green-50/50');
+      label.innerHTML = '<span class="text-gold-400 font-semibold">' + file.name + '</span> <span class="text-white/30">(' + sizeMB + ' MB)</span>';
+      input.closest('.border-dashed').classList.remove('border-white/[0.12]');
+      input.closest('.border-dashed').classList.add('border-gold-500/40', 'bg-gold-500/[0.04]');
     }
   }
 
-  // Show loading state on form submit
   document.getElementById('upload-form').addEventListener('submit', function() {
     var btn = document.getElementById('upload-btn');
     btn.disabled = true;
