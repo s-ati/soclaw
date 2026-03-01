@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: soclaw
+    runtime: docker
+    plan: free
+    envVars:
+      - key: SM_JWT_SECRET
+        generateValue: true
+      - key: SM_DATABASE_URL
+        value: sqlite:///./soclaw.db
+      - key: SM_AI_API_KEY
+        sync: false
+      - key: SM_AI_PROVIDER
+        value: groq
+      - key: SM_AI_MODEL
+        value: llama-3.1-8b-instant
