@@ -169,6 +169,7 @@ def upload_post(
     cv_pdf: UploadFile = File(...),
     linkedin_pdf: UploadFile | None = File(None),
     linkedin_url: str | None = Form(None),
+    full_name: str | None = Form(None),
     location: str | None = Form(None),
     availability: str | None = Form(None),
     remote_only: str = Form("no"),
@@ -216,6 +217,8 @@ def upload_post(
     )
     # store metadata in extraction (structured safe)
     prof.extraction["remote_only"] = (remote_only == "yes")
+    if full_name and full_name.strip():
+        prof.extraction["full_name"] = full_name.strip()
     if location and location.strip():
         prof.extraction["location"] = location.strip()
     if availability and availability.strip():
@@ -320,6 +323,7 @@ def assess_job(
 
     generate_pdf(
         out_path=pdf_path,
+        candidate_name=profile.extraction.get("full_name"),
         candidate_email=user.email,
         job=job_dict,
         linkedin_url=profile.linkedin_url,
