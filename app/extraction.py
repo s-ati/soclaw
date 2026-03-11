@@ -48,13 +48,12 @@ def extract_structured(text: str, skill_dict: dict | None = None) -> dict:
         if normalize_token(c) in t:
             courses_found.append(c)
 
-    # Ultra-light project detection: extract lines containing keywords
+    # Legacy project detection (kept for backward compatibility)
     projects_found = []
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     for ln in lines:
         ln_norm = normalize_token(ln)
         if any(k in ln_norm for k in PROJECT_KEYWORDS):
-            # keep it short, avoid storing raw text; just store a normalized label
             label = ln.strip()
             if len(label) > 80:
                 label = label[:77] + "..."
@@ -67,9 +66,15 @@ def extract_structured(text: str, skill_dict: dict | None = None) -> dict:
         if normalize_token(k) in t:
             context_hits.append(k)
 
+    # Section-aware evidence extraction
+    from .evidence import parse_sections, extract_evidence_items
+    sections = parse_sections(text)
+    evidence_items = extract_evidence_items(sections)
+
     return {
         "skills": sorted(set(skills_found)),
         "courses": sorted(set(courses_found))[:10],
         "projects": projects_found[:6],
         "context_keywords": sorted(set(context_hits))[:20],
+        "evidence_items": evidence_items,
     }
