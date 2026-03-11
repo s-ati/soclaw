@@ -18,6 +18,7 @@ from .extraction import extract_structured
 from .scoring import compute_soclaw, DEFAULT_WEIGHTS_CORP_INTERN
 from .pdf_report import generate_pdf
 from .ai_client import AIClient
+from .evidence import evaluate_evidence
 from .seed import seed
 from .retention import purge_expired
 
@@ -314,6 +315,13 @@ def assess_job(
         ai_questions=ai_questions,
     )
 
+    # Evidence evaluation pipeline
+    evidence_summary = evaluate_evidence(
+        extraction=profile.extraction,
+        job=job_dict,
+        ai_client=ai if ai.enabled else None,
+    )
+
     # Persist assessment + PDF
     pdf_filename = f"soclaw_report_{user.id}_{job.id}_{uuid.uuid4().hex}.pdf"
     pdf_path = str(REPORTS_DIR / pdf_filename)
@@ -336,6 +344,7 @@ def assess_job(
         recommendation=res.recommendation,
         flags=res.flags,
         interview_questions=res.interview_questions,
+        evidence_summary=evidence_summary,
     )
 
     assessment = Assessment(
