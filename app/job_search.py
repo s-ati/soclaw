@@ -253,54 +253,22 @@ def _rank(results: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# DuckDuckGo search (with site-scoped queries for better ATS coverage)
+# DuckDuckGo search
 # ---------------------------------------------------------------------------
-
-# Site fragments to include in scoped searches for better ATS results
-_SITE_SCOPES = [
-    "site:greenhouse.io",
-    "site:lever.co",
-    "site:ashbyhq.com",
-    "site:workable.com",
-    "site:smartrecruiters.com",
-]
-
-
 async def _search_ddg(query: str, num: int = 8) -> dict:
     import asyncio
     from concurrent.futures import ThreadPoolExecutor
 
-    def _do_broad_search():
+    def _do_search():
         from duckduckgo_search import DDGS
+        # Single broad query — DDG rate-limits parallel requests
         return DDGS().text(f"{query} job posting", max_results=min(num * 5, 40))
-
-    def _do_scoped_search(scope: str):
-        from duckduckgo_search import DDGS
-        return DDGS().text(f"{query} {scope}", max_results=5)
 
     try:
         loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            all_raw = await loop.run_in_executor(pool, _do_search)
 
-        # Run broad + scoped searches concurrently
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            broad_future = loop.run_in_executor(pool, _do_broad_search)
-
-            # Pick 2 ATS scopes to also query directly
-            scope_futures = []
-            for scope in _SITE_SCOPES[:2]:
-                scope_futures.append(loop.run_in_executor(pool, _do_scoped_search, scope))
-
-            raw_broad = await broad_future
-            raw_scoped = []
-            for f in scope_futures:
-                try:
-                    result = await f
-                    if result:
-                        raw_scoped.extend(result)
-                except Exception:
-                    pass
-
-        all_raw = (raw_broad or []) + raw_scoped
         if not all_raw:
             return {"results": [], "error": "No results found. Try a different search term."}
 
