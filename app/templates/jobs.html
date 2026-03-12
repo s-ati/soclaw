@@ -11,6 +11,10 @@
   .job-card:nth-child(2) { animation-delay: 0.08s; }
   .job-card:nth-child(3) { animation-delay: 0.16s; }
   .job-card:nth-child(4) { animation-delay: 0.24s; }
+  .job-card:nth-child(5) { animation-delay: 0.32s; }
+  .job-card:nth-child(6) { animation-delay: 0.40s; }
+  .job-card:nth-child(7) { animation-delay: 0.48s; }
+  .job-card:nth-child(8) { animation-delay: 0.56s; }
   .details-panel {
     max-height: 0;
     overflow: hidden;
@@ -27,6 +31,11 @@
   }
   .chevron-icon { transition: transform 0.3s ease; }
   .chevron-icon.rotated { transform: rotate(180deg); }
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+  .skeleton-pulse { animation: pulse-subtle 1.5s ease-in-out infinite; }
 </style>
 
 <!-- Page Header -->
@@ -35,7 +44,7 @@
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
     Available Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">Explore each role, then select a job to generate your personalized assessment report.</p>
+  <p class="text-white/40 mt-1 font-light">Search for real jobs or browse existing roles, then select one to generate your personalized assessment report.</p>
 </div>
 
 <!-- Error Message -->
@@ -46,7 +55,63 @@
 </div>
 {% endif %}
 
-<!-- Job Cards (FULL WIDTH) -->
+<!-- Search Section -->
+{% if search_enabled %}
+<div class="mb-8 card-premium rounded-lg p-6">
+  <div class="flex flex-col sm:flex-row gap-3">
+    <div class="flex-1 relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="job-search-input" placeholder="Search jobs... e.g. &quot;Data Analyst Berlin&quot;"
+        class="w-full pl-10 pr-4 py-3 rounded-md bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/30 focus:outline-none focus:border-gold-500/40 focus:ring-1 focus:ring-gold-500/20 text-sm"
+        onkeydown="if(event.key==='Enter')searchJobs()">
+    </div>
+    <button onclick="searchJobs()" id="search-btn"
+      class="btn-gold inline-flex items-center justify-center gap-2 py-3 px-6 rounded-md text-sm font-medium whitespace-nowrap">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      Search
+    </button>
+  </div>
+
+  <!-- Search Status -->
+  <div id="search-status" class="hidden mt-4">
+    <div id="search-loading" class="hidden">
+      <div class="flex items-center gap-3 text-white/40 text-sm">
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        Searching for jobs...
+      </div>
+      <!-- Loading skeletons -->
+      <div class="mt-4 space-y-3">
+        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]"></div>
+        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.3s"></div>
+        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.6s"></div>
+      </div>
+    </div>
+    <div id="search-error" class="hidden bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 flex items-center gap-3">
+      <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p class="text-red-300 text-sm" id="search-error-text"></p>
+    </div>
+  </div>
+
+  <!-- Search Results -->
+  <div id="search-results" class="hidden mt-4">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold text-white/60">Search Results</h3>
+      <button onclick="clearSearch()" class="text-xs text-white/30 hover:text-white/60 transition-colors">Clear</button>
+    </div>
+    <div id="search-results-list" class="space-y-3"></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Existing Jobs Section -->
+<div class="mb-4">
+  <h2 class="text-lg font-semibold text-white/70 flex items-center gap-2">
+    <svg class="w-5 h-5 text-gold-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+    Saved Jobs
+  </h2>
+</div>
+
+<!-- Job Cards -->
 <div class="space-y-4">
   {% for j in jobs %}
   <div class="job-card card-premium rounded-lg hover:border-gold-500/20 transition-all">
@@ -178,7 +243,7 @@
 {% if not jobs %}
 <div class="text-center py-16">
   <svg class="w-16 h-16 text-white/10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-  <p class="text-white/20">No active jobs available at the moment.</p>
+  <p class="text-white/20">No saved jobs. Use the search above to find real job listings.</p>
 </div>
 {% endif %}
 
@@ -196,6 +261,149 @@
     btn.classList.add('opacity-75', 'cursor-not-allowed');
     btn.querySelector('.btn-icon').outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
     btn.querySelector('.btn-text').textContent = 'Generating Report...';
+  }
+
+  // --- Live Job Search ---
+  function searchJobs() {
+    var q = document.getElementById('job-search-input').value.trim();
+    if (!q) return;
+
+    var statusEl = document.getElementById('search-status');
+    var loadingEl = document.getElementById('search-loading');
+    var errorEl = document.getElementById('search-error');
+    var resultsEl = document.getElementById('search-results');
+    var listEl = document.getElementById('search-results-list');
+
+    // Show loading
+    statusEl.classList.remove('hidden');
+    loadingEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
+    resultsEl.classList.add('hidden');
+    listEl.innerHTML = '';
+
+    // Disable search button
+    var btn = document.getElementById('search-btn');
+    btn.disabled = true;
+    btn.classList.add('opacity-75');
+
+    fetch('/api/jobs/search?q=' + encodeURIComponent(q))
+      .then(function(resp) { return resp.json(); })
+      .then(function(data) {
+        loadingEl.classList.add('hidden');
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+
+        if (data.error) {
+          errorEl.classList.remove('hidden');
+          document.getElementById('search-error-text').textContent = data.error;
+          return;
+        }
+
+        if (!data.results || data.results.length === 0) {
+          errorEl.classList.remove('hidden');
+          document.getElementById('search-error-text').textContent = 'No results found. Try a different search term.';
+          return;
+        }
+
+        resultsEl.classList.remove('hidden');
+        data.results.forEach(function(job, idx) {
+          listEl.innerHTML += renderSearchResult(job, idx);
+        });
+      })
+      .catch(function(err) {
+        loadingEl.classList.add('hidden');
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        errorEl.classList.remove('hidden');
+        document.getElementById('search-error-text').textContent = 'Network error. Please check your connection and try again.';
+      });
+  }
+
+  function clearSearch() {
+    document.getElementById('search-status').classList.add('hidden');
+    document.getElementById('search-results').classList.add('hidden');
+    document.getElementById('search-results-list').innerHTML = '';
+    document.getElementById('job-search-input').value = '';
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function locationBadge(policy) {
+    if (policy === 'remote') {
+      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>';
+    } else if (policy === 'hybrid') {
+      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>';
+    }
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Onsite</span>';
+  }
+
+  function skillBadges(skills) {
+    if (!skills || skills.length === 0) return '';
+    return skills.map(function(s) {
+      var name = (s.name || '').replace(/_/g, ' ');
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/[0.04] text-white/50 border border-white/[0.08]">' + escapeHtml(name) + '</span>';
+    }).join('');
+  }
+
+  function renderSearchResult(job, idx) {
+    var skillsJson = JSON.stringify(job.required_skills || []).replace(/"/g, '&quot;');
+    var niceSkillsJson = JSON.stringify(job.nice_to_have_skills || []).replace(/"/g, '&quot;');
+    var ctxJson = JSON.stringify(job.context_keywords || []).replace(/"/g, '&quot;');
+
+    var html = '<div class="job-card card-premium rounded-lg hover:border-gold-500/20 transition-all" style="animation-delay:' + (idx * 0.06) + 's">';
+    html += '<div class="p-5">';
+    html += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">';
+
+    // Left: job info
+    html += '<div class="flex-1 min-w-0">';
+    html += '<h3 class="font-bold text-white text-base mb-1 truncate">' + escapeHtml(job.title) + '</h3>';
+    html += '<p class="text-gold-500 font-medium text-sm mb-2">' + escapeHtml(job.company) + '</p>';
+
+    // Snippet
+    if (job.snippet) {
+      html += '<p class="text-white/30 text-xs leading-relaxed mb-2 line-clamp-2">' + escapeHtml(job.snippet) + '</p>';
+    }
+
+    // Badges row
+    html += '<div class="flex flex-wrap items-center gap-2">';
+    html += locationBadge(job.location_policy);
+    html += skillBadges(job.required_skills);
+    html += '</div>';
+
+    // Source link
+    if (job.url) {
+      html += '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-2 text-xs text-white/20 hover:text-gold-500/60 transition-colors">';
+      html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+      html += escapeHtml(job.source || 'View original');
+      html += '</a>';
+    }
+
+    html += '</div>';
+
+    // Right: select button
+    html += '<div class="flex-shrink-0">';
+    html += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
+    html += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
+    html += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
+    html += '<input type="hidden" name="location_policy" value="' + escapeHtml(job.location_policy) + '">';
+    html += '<input type="hidden" name="required_skills" value="' + skillsJson + '">';
+    html += '<input type="hidden" name="nice_to_have_skills" value="' + niceSkillsJson + '">';
+    html += '<input type="hidden" name="context_keywords" value="' + ctxJson + '">';
+    html += '<input type="hidden" name="url" value="' + escapeHtml(job.url || '') + '">';
+    html += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm">';
+    html += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+    html += '<span class="btn-text">Select Job</span>';
+    html += '</button>';
+    html += '</form>';
+    html += '</div>';
+
+    html += '</div></div></div>';
+    return html;
   }
 </script>
 
