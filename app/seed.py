@@ -88,6 +88,51 @@ def seed(db: Session):
                 weights={"S":0.30,"O":0.18,"C":0.12,"L":0.08,"A":0.15,"W":0.17},
                 active=True
             ),
+            Job(
+                title="Venture Fund Intern",
+                company="USF Ventures",
+                location_policy="hybrid",
+                required_skills=[
+                    {"name": "financial_modeling", "tier": "must", "weight": 3},
+                    {"name": "analysis", "tier": "must", "weight": 3},
+                    {"name": "communication", "tier": "must", "weight": 3},
+                    {"name": "powerpoint", "tier": "must", "weight": 2},
+                    {"name": "excel", "tier": "must", "weight": 2},
+                ],
+                nice_to_have_skills=[
+                    {"name": "python", "weight": 1},
+                    {"name": "design", "weight": 1},
+                ],
+                context_keywords=["startup", "cross-functional", "collaborative", "autonomous", "fast-paced"],
+                weights={"S": 0.22, "O": 0.22, "C": 0.12, "L": 0.08, "A": 0.18, "W": 0.18},
+                source_url=None,
+                active=True,
+            ),
         ]
         db.add_all(jobs)
+        db.commit()
+
+    # Ensure USF Ventures exists even if other seed jobs were already created
+    if not db.query(Job).filter(Job.company == "USF Ventures").first():
+        usf = Job(
+            title="Venture Fund Intern",
+            company="USF Ventures",
+            location_policy="hybrid",
+            required_skills=[
+                {"name": "financial_modeling", "tier": "must", "weight": 3},
+                {"name": "analysis", "tier": "must", "weight": 3},
+                {"name": "communication", "tier": "must", "weight": 3},
+                {"name": "powerpoint", "tier": "must", "weight": 2},
+                {"name": "excel", "tier": "must", "weight": 2},
+            ],
+            nice_to_have_skills=[
+                {"name": "python", "weight": 1},
+                {"name": "design", "weight": 1},
+            ],
+            context_keywords=["startup", "cross-functional", "collaborative", "autonomous", "fast-paced"],
+            weights={"S": 0.22, "O": 0.22, "C": 0.12, "L": 0.08, "A": 0.18, "W": 0.18},
+            source_url=None,
+            active=True,
+        )
+        db.add(usf)
         db.commit()
