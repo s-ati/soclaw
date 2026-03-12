@@ -210,7 +210,11 @@ def _extract_context_keywords(text: str) -> list[str]:
 
 
 def _assess_extraction_quality(data: dict) -> dict:
-    """Score the extraction quality to decide if we have enough for a report."""
+    """Score the extraction quality to decide if we have enough for a report.
+
+    Also sets `data_confidence` ("strong", "adequate", "weak") which
+    downstream scoring uses to decide whether results are trustworthy.
+    """
     score = 0
     reasons = []
 
@@ -222,30 +226,43 @@ def _assess_extraction_quality(data: dict) -> dict:
     if data.get("company") and data["company"] != "Unknown":
         score += 10
 
-    if data.get("description") and len(data["description"]) > 100:
+    if data.get("description") and len(data["description"]) > 200:
         score += 25
-    elif data.get("description") and len(data["description"]) > 30:
+    elif data.get("description") and len(data["description"]) > 50:
         score += 10
     else:
         reasons.append("description too short")
 
-    if data.get("required_skills") and len(data["required_skills"]) >= 2:
+    num_skills = len(data.get("required_skills", []))
+    if num_skills >= 3:
         score += 25
-    elif data.get("required_skills") and len(data["required_skills"]) >= 1:
+    elif num_skills >= 1:
         score += 10
     else:
         reasons.append("no skills identified")
 
-    if data.get("requirements"):
+    if data.get("requirements") and len(data["requirements"]) > 30:
         score += 10
+    else:
+        reasons.append("no requirements section")
 
-    if data.get("responsibilities"):
+    if data.get("responsibilities") and len(data["responsibilities"]) > 30:
         score += 10
 
     data["extraction_quality"] = score
-    data["quality_sufficient"] = score >= 45
+
+    # Quality gate: need at least 50 to generate a report
+    data["quality_sufficient"] = score >= 50
     if not data["quality_sufficient"]:
         data["quality_reasons"] = reasons
+
+    # Data confidence for scoring differentiation
+    if score >= 70 and num_skills >= 3:
+        data["data_confidence"] = "strong"
+    elif score >= 50 and num_skills >= 1:
+        data["data_confidence"] = "adequate"
+    else:
+        data["data_confidence"] = "weak"
 
     return data
 

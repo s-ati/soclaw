@@ -27,7 +27,13 @@ class ScoreResult:
     interview_questions: list[str]
 
 
-def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list[dict]) -> tuple[float, list[str]]:
+def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list[dict]) -> tuple[float, list[str], bool]:
+    """Returns (score, missing_must_skills, has_skill_data).
+
+    When the job has no required_skills at all (thin extraction), we return
+    a neutral 50% instead of 0% — this prevents every thin-data job from
+    hitting the same capped score and producing undifferentiated reports.
+    """
     skills = set(extraction.get("skills", []))
     missing_must = []
 
@@ -45,9 +51,10 @@ def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list
                 missing_must.append(name)
 
     if total_w <= 0:
-        base = 0.0
-    else:
-        base = 100.0 * (matched_w / total_w)
+        # No skill data from the job posting — return neutral score
+        return 50.0, [], False
+
+    base = 100.0 * (matched_w / total_w)
 
     nice_matched = 0
     for s in job_nice:
@@ -55,7 +62,7 @@ def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list
             nice_matched += 1
 
     bonus = min(10.0, 2.0 * nice_matched)
-    return clamp01(base + bonus), missing_must
+    return clamp01(base + bonus), missing_must, True
 
 
 def compute_context_cv(extraction: dict) -> float:
@@ -158,7 +165,7 @@ def compute_soclaw(
     C_behavioral = clamp01(normalize_likert(float(Q7)))
     L_behavioral = clamp01(normalize_likert(float(Q8)))
 
-    S, missing_must = compute_skill_fit(extraction, job["required_skills"], job.get("nice_to_have_skills", []))
+    S, missing_must, has_skill_data = compute_skill_fit(extraction, job["required_skills"], job.get("nice_to_have_skills", []))
 
     C_cv = compute_context_cv(extraction)
     C = clamp01(0.6 * C_cv + 0.4 * C_behavioral)
@@ -179,7 +186,10 @@ def compute_soclaw(
         match = min(match, 60.0)
         flags.append("location_incompatible")
 
-    if missing_must or fits["S"] < 40.0:
+    if not has_skill_data:
+        # Job had no extractable skill requirements — flag but don't penalize
+        flags.append("no_skill_data")
+    elif missing_must or fits["S"] < 40.0:
         risks["S"] = max(risks["S"], 85.0)
         match = min(match, 55.0)
         flags.append("critical_skill_gap")

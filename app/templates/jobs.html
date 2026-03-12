@@ -25,17 +25,15 @@
   .chevron-icon.rotated { transform: rotate(180deg); }
   @keyframes pulse-subtle { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
   .skeleton-pulse { animation: pulse-subtle 1.5s ease-in-out infinite; }
-  .quality-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; }
-  .quality-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
 </style>
 
 <!-- Page Header -->
 <div class="mb-8">
   <h1 class="text-3xl font-bold text-white flex items-center gap-3">
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-    Available Jobs
+    Assessment-Ready Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">Search for jobs, then select a result to generate your assessment in one click.</p>
+  <p class="text-white/40 mt-1 font-light">We show jobs from verified sources that we can analyze reliably. Select any result for one-click assessment.</p>
 </div>
 
 {% if error %}
@@ -61,12 +59,13 @@
       Search
     </button>
   </div>
+  <p class="text-[11px] text-white/20 mt-2">Searches Greenhouse, Lever, Ashby, Workable, and direct company career pages.</p>
 
   <div id="search-status" class="hidden mt-4">
     <div id="search-loading" class="hidden">
       <div class="flex items-center gap-3 text-white/40 text-sm">
         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-        Searching for jobs...
+        Searching supported sources...
       </div>
       <div class="mt-4 space-y-3">
         <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]"></div>
@@ -84,7 +83,6 @@
       <h3 class="text-sm font-semibold text-white/60">Search Results</h3>
       <button onclick="clearSearch()" class="text-xs text-white/30 hover:text-white/60 transition-colors">Clear</button>
     </div>
-    <p class="text-[11px] text-white/25 mb-3">Results are ranked by extractability. Green-badged results work best for one-click assessment.</p>
     <div id="search-results-list" class="space-y-3"></div>
   </div>
 </div>
@@ -169,7 +167,7 @@
 
 {% if not jobs %}
 <div class="text-center py-12">
-  <p class="text-white/20">No saved jobs. Use the search above to find real job listings.</p>
+  <p class="text-white/20">No saved jobs yet. Use the search above to find assessment-ready postings.</p>
 </div>
 {% endif %}
 
@@ -189,7 +187,7 @@
     btn.disabled = true;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
     btn.querySelector('.btn-icon').outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
-    btn.querySelector('.btn-text').textContent = 'Extracting & Generating...';
+    btn.querySelector('.btn-text').textContent = 'Generating assessment...';
   }
 
   function searchJobs() {
@@ -224,7 +222,7 @@
         }
         if (!data.results || data.results.length === 0) {
           errorEl.classList.remove('hidden');
-          document.getElementById('search-error-text').textContent = 'No results found. Try a different search term.';
+          document.getElementById('search-error-text').textContent = 'No assessment-ready postings found. Try adding a company name or a more specific role title.';
           return;
         }
         resultsEl.classList.remove('hidden');
@@ -271,22 +269,11 @@
     }).join('');
   }
 
-  function extractabilityBadge(ext) {
-    if (ext === 'high') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">High extractability</span>';
-    if (ext === 'medium') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Medium extractability</span>';
-    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">Low extractability</span>';
-  }
-
-  function qualityIndicator(score, isAgg, ext) {
-    var color = score >= 70 ? '#0D9488' : score >= 40 ? '#D4A843' : '#EF4444';
-    var label = score >= 70 ? 'Likely a real posting' : score >= 40 ? 'May be a listing page' : 'Probably not a job posting';
-    if (isAgg) { label = 'Listing/category page'; color = '#EF4444'; }
-    var h = '<div class="mt-2 flex items-center gap-2">';
-    h += extractabilityBadge(ext || 'low');
-    h += '<div class="quality-bar" style="width:60px"><div class="quality-fill" style="width:' + Math.max(10,score) + '%;background:' + color + '"></div></div>';
-    h += '<span class="text-[10px] text-white/20">' + escapeHtml(label) + '</span>';
-    h += '</div>';
-    return h;
+  function sourceBadge(sourceType, sourceName) {
+    if (sourceType === 'ats') {
+      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">' + escapeHtml(sourceName) + '</span>';
+    }
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">' + escapeHtml(sourceName) + '</span>';
   }
 
   // Fetch extracted details for a search result
@@ -310,7 +297,7 @@
     }
 
     // Show loading state
-    panel.innerHTML = '<div class="flex items-center gap-2 text-white/30 text-xs py-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Extracting job details from source page...</div>';
+    panel.innerHTML = '<div class="flex items-center gap-2 text-white/30 text-xs py-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Extracting job details...</div>';
     panel.classList.add('open');
 
     fetch('/api/jobs/extract?url=' + encodeURIComponent(url))
@@ -320,25 +307,25 @@
         renderExtractedDetails(idx, data);
       })
       .catch(function() {
-        panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Failed to extract details. The page may be unavailable.</p>';
+        panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Could not extract details. Try selecting the job directly or choose another posting.</p>';
       });
   }
 
   function renderExtractedDetails(idx, data) {
     var panel = document.getElementById('sr-details-' + idx);
     if (data.error && !data.quality_sufficient) {
-      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + ' Try choosing a different posting with higher extractability.</p>';
+      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + ' Please choose a different posting.</p>';
       return;
     }
     if (!data.quality_sufficient) {
-      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Not enough structured content found on this page. Please choose a different posting \u2014 results from Greenhouse, Lever, or Ashby work best.</p>';
+      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">This page did not contain enough structured job content. Please choose a different posting.</p>';
       return;
     }
 
     var h = '';
 
     if (data.title) {
-      h += '<div class="mb-2"><span class="text-xs text-white/40">Extracted Title:</span> <span class="text-sm text-white font-medium">' + escapeHtml(data.title) + '</span></div>';
+      h += '<div class="mb-2"><span class="text-xs text-white/40">Title:</span> <span class="text-sm text-white font-medium">' + escapeHtml(data.title) + '</span></div>';
     }
     if (data.company && data.company !== 'Unknown') {
       h += '<div class="mb-2"><span class="text-xs text-white/40">Company:</span> <span class="text-sm text-white">' + escapeHtml(data.company) + '</span></div>';
@@ -361,10 +348,10 @@
       h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Responsibilities</h4><p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(respText) + (data.responsibilities.length > 400 ? '...' : '') + '</p></div>';
     }
 
-    var qScore = data.extraction_quality || 0;
-    var qLabel = qScore >= 60 ? 'Good — enough for assessment' : qScore >= 40 ? 'Fair — basic assessment possible' : 'Weak — may produce unreliable results';
-    var qColor = qScore >= 60 ? 'text-green-400' : qScore >= 40 ? 'text-gold-400' : 'text-red-400';
-    h += '<div class="pt-2 border-t border-white/[0.06]"><span class="text-[10px] text-white/20">Extraction quality: </span><span class="text-[10px] ' + qColor + '">' + qLabel + ' (' + qScore + '/100)</span></div>';
+    var conf = data.data_confidence || 'adequate';
+    var confLabel = conf === 'strong' ? 'Rich job data extracted' : conf === 'adequate' ? 'Sufficient data for assessment' : 'Limited data extracted';
+    var confColor = conf === 'strong' ? 'text-green-400' : conf === 'adequate' ? 'text-gold-400' : 'text-red-400';
+    h += '<div class="pt-2 border-t border-white/[0.06]"><span class="text-[10px] ' + confColor + '">' + confLabel + '</span></div>';
 
     panel.innerHTML = h;
   }
@@ -381,15 +368,16 @@
     if (job.snippet) {
       h += '<p class="text-white/25 text-xs leading-relaxed mb-2 line-clamp-2">' + escapeHtml(job.snippet) + '</p>';
     }
+    // Source badge + link
+    h += '<div class="flex items-center gap-2 mt-1">';
+    h += sourceBadge(job.source_type, job.source);
     if (job.url) {
       h += '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-white/20 hover:text-gold-500/60 transition-colors">';
       h += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-      h += escapeHtml(job.source || 'View original') + '</a>';
+      h += 'View original</a>';
     }
-    h += qualityIndicator(job.quality_score || 50, job.is_aggregator, job.extractability);
     h += '</div>';
-
-    var isLow = (job.extractability === 'low');
+    h += '</div>';
 
     // Right: buttons
     h += '<div class="flex flex-col gap-2 flex-shrink-0">';
@@ -400,20 +388,14 @@
     h += 'Details <svg id="sr-chevron-' + idx + '" class="w-4 h-4 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
     h += '</button>';
 
-    // Select button (form posts URL for backend extraction)
-    if (isLow) {
-      h += '<button disabled class="inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center opacity-40 cursor-not-allowed border border-white/[0.06] text-white/30">';
-      h += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
-      h += '<span>Not extractable</span></button>';
-    } else {
-      h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
-      h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
-      h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
-      h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
-      h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
-      h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-      h += '<span class="btn-text">Select Job</span></button></form>';
-    }
+    // Select button
+    h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
+    h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
+    h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
+    h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
+    h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
+    h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+    h += '<span class="btn-text">Select Job</span></button></form>';
 
     h += '</div></div>';
 

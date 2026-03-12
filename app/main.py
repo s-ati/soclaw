@@ -292,8 +292,6 @@ async def create_job_from_search(
     db: Session = Depends(get_db),
 ):
     """Extract real job content from URL, create a Job record, and assess."""
-    import json
-
     # Extract real job content from source URL
     extracted = None
     if url:
@@ -322,7 +320,7 @@ async def create_job_from_search(
             reason = "insufficient job content"
         return templates.TemplateResponse("jobs.html", {
             "request": request, "jobs": jobs,
-            "error": f"Could not extract enough job details from this page ({reason}). Please choose a different posting \u2014 results marked \u201cHigh\u201d extractability work best.",
+            "error": f"This posting could not be analyzed ({reason}). Please choose a different job from the search results.",
             "search_enabled": True,
         })
 
