@@ -64,6 +64,9 @@ class Job(Base):
     # weights: {"S":0.25,"O":0.20,"W":0.18,"A":0.15,"C":0.12,"L":0.10}
     weights: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
+    # Original posting URL (for "Apply" redirect)
+    source_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

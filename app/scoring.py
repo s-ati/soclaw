@@ -27,12 +27,14 @@ class ScoreResult:
     interview_questions: list[str]
 
 
-def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list[dict]) -> tuple[float, list[str], bool]:
-    """Returns (score, missing_must_skills, has_skill_data).
+def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list[dict]) -> tuple[float, list[str], bool, int]:
+    """Returns (score, missing_must_skills, has_skill_data, num_required_skills).
 
     When the job has no required_skills at all (thin extraction), we return
     a neutral 50% instead of 0% — this prevents every thin-data job from
     hitting the same capped score and producing undifferentiated reports.
+
+    num_required_skills is returned so callers can assess skill data richness.
     """
     skills = set(extraction.get("skills", []))
     missing_must = []
@@ -50,9 +52,11 @@ def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list
             if s.get("tier") == "must" and int(s.get("weight", 1)) >= 3:
                 missing_must.append(name)
 
+    num_required = len(job_required)
+
     if total_w <= 0:
         # No skill data from the job posting — return neutral score
-        return 50.0, [], False
+        return 50.0, [], False, 0
 
     base = 100.0 * (matched_w / total_w)
 
@@ -62,7 +66,7 @@ def compute_skill_fit(extraction: dict, job_required: list[dict], job_nice: list
             nice_matched += 1
 
     bonus = min(10.0, 2.0 * nice_matched)
-    return clamp01(base + bonus), missing_must, True
+    return clamp01(base + bonus), missing_must, True, num_required
 
 
 def compute_context_cv(extraction: dict) -> float:
@@ -165,7 +169,7 @@ def compute_soclaw(
     C_behavioral = clamp01(normalize_likert(float(Q7)))
     L_behavioral = clamp01(normalize_likert(float(Q8)))
 
-    S, missing_must, has_skill_data = compute_skill_fit(extraction, job["required_skills"], job.get("nice_to_have_skills", []))
+    S, missing_must, has_skill_data, num_required = compute_skill_fit(extraction, job["required_skills"], job.get("nice_to_have_skills", []))
 
     C_cv = compute_context_cv(extraction)
     C = clamp01(0.6 * C_cv + 0.4 * C_behavioral)
@@ -180,7 +184,7 @@ def compute_soclaw(
     match = weight_sum(fits, job.get("weights") or DEFAULT_WEIGHTS_CORP_INTERN)
     flags: list[str] = []
 
-    # Hard stops (high quality defaults)
+    # Hard stops
     if L_struct == 0.0:
         risks["L"] = max(risks["L"], 90.0)
         match = min(match, 60.0)
@@ -189,10 +193,21 @@ def compute_soclaw(
     if not has_skill_data:
         # Job had no extractable skill requirements — flag but don't penalize
         flags.append("no_skill_data")
-    elif missing_must or fits["S"] < 40.0:
+    elif missing_must and num_required >= 3:
+        # Strong skill data with confirmed missing must-haves → hard cap
         risks["S"] = max(risks["S"], 85.0)
         match = min(match, 55.0)
         flags.append("critical_skill_gap")
+    elif fits["S"] < 40.0 and num_required >= 3:
+        # Strong skill data with very low match → moderate cap
+        risks["S"] = max(risks["S"], 75.0)
+        match = min(match, 60.0)
+        flags.append("skill_gap")
+    elif fits["S"] < 40.0 and num_required < 3:
+        # Thin skill data (1-2 skills extracted) — flag but use softer cap
+        # Thin data shouldn't dominate the score
+        risks["S"] = max(risks["S"], 60.0)
+        flags.append("limited_skill_data")
 
     if fits["O"] < 30.0:
         risks["O"] = max(risks["O"], 80.0)

@@ -526,6 +526,7 @@ async def create_job_from_search(
             nice_to_have_skills=extracted.get("nice_to_have_skills", []),
             context_keywords=extracted.get("context_keywords", []),
             weights=DEFAULT_WEIGHTS_CORP_INTERN,
+            source_url=(provider_job.get("source_url") or extracted.get("source_url") or "")[:1024] or None,
             active=True,
         )
     else:
