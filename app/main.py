@@ -697,16 +697,33 @@ def assess_job(
     ))
     db.commit()
 
-    # Format fits/risks for display with full SOCLAW dimension names
+    # Redirect to GET result page (Post/Redirect/Get pattern to prevent
+    # browser form-resubmission loops on back-navigation)
+    return RedirectResponse(f"/assessments/{assessment.id}/result", status_code=303)
+
+@app.get("/assessments/{assessment_id}/result", response_class=HTMLResponse)
+def assessment_result(
+    request: Request,
+    assessment_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    assessment = db.query(Assessment).filter(
+        Assessment.id == assessment_id,
+        Assessment.user_id == user.id,
+    ).first()
+    if not assessment:
+        return RedirectResponse("/jobs", status_code=303)
+
     dim_names = {"S": "Skill", "O": "Ownership", "C": "Context", "L": "Location", "A": "Adaptability", "W": "Work style"}
-    fits_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in res.fits.items())
-    risks_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in res.risks.items())
+    fits_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in assessment.fits.items())
+    risks_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in assessment.risks.items())
 
     return templates.TemplateResponse("assessment_result.html", {
         "request": request,
-        "match_score": res.match_score,
-        "recommendation": res.recommendation,
-        "flags": res.flags,
+        "match_score": assessment.match_score,
+        "recommendation": assessment.recommendation,
+        "flags": assessment.flags,
         "assessment_id": assessment.id,
         "fits": fits_text,
         "risks": risks_text,
