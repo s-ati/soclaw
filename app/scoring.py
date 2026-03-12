@@ -193,20 +193,21 @@ def compute_soclaw(
     if not has_skill_data:
         # Job had no extractable skill requirements — flag but don't penalize
         flags.append("no_skill_data")
-    elif missing_must and num_required >= 3:
-        # Strong skill data with confirmed missing must-haves → hard cap
+    elif fits["S"] < 25.0 and num_required >= 3:
+        # Truly critical: very low skill match with strong data → hard cap
         risks["S"] = max(risks["S"], 85.0)
-        match = min(match, 55.0)
+        match = min(match, 50.0)
         flags.append("critical_skill_gap")
     elif fits["S"] < 40.0 and num_required >= 3:
-        # Strong skill data with very low match → moderate cap
-        risks["S"] = max(risks["S"], 75.0)
+        # Low skill match with strong data → moderate cap
+        risks["S"] = max(risks["S"], 70.0)
         match = min(match, 60.0)
         flags.append("skill_gap")
+    elif missing_must and fits["S"] < 50.0:
+        # Missing specific must-haves AND below-average skill fit → flag only
+        flags.append("missing_skills")
     elif fits["S"] < 40.0 and num_required < 3:
-        # Thin skill data (1-2 skills extracted) — flag but use softer cap
-        # Thin data shouldn't dominate the score
-        risks["S"] = max(risks["S"], 60.0)
+        # Thin skill data — flag only, don't cap
         flags.append("limited_skill_data")
 
     if fits["O"] < 30.0:
