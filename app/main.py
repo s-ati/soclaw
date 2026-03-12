@@ -10,7 +10,7 @@ import uuid
 
 from .settings import settings
 from .db import Base, engine, get_db
-from .models import User, CandidateProfile, Job, Assessment
+from .models import User, CandidateProfile, Job, Assessment, Application, ActivityLog, APPLICATION_STATUSES
 from .security import hash_password, verify_password, create_jwt
 from .auth import get_current_user
 from .parsing import pdf_to_text, safe_delete
@@ -20,7 +20,7 @@ from .pdf_report import generate_pdf
 from .ai_client import AIClient
 from .evidence import evaluate_evidence
 from .job_search import search_jobs
-from .job_extractor import extract_job_from_url
+from .job_extractor import extract_from_structured_job
 from .seed import seed
 from .retention import purge_expired
 
@@ -153,6 +153,52 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
     else:
         current_step = 5
 
+    # --- KPI data ---
+    applications = db.query(Application).filter(Application.user_id == user.id).all()
+
+    # Pipeline counts
+    pipeline = {s: 0 for s in APPLICATION_STATUSES}
+    for app_row in applications:
+        if app_row.status in pipeline:
+            pipeline[app_row.status] += 1
+
+    kpis = {
+        "applications_sent": pipeline.get("applied", 0) + pipeline.get("interview", 0) + pipeline.get("offer", 0) + pipeline.get("rejected", 0),
+        "reports_created": len(assessments),
+        "interviews": pipeline.get("interview", 0),
+        "offers": pipeline.get("offer", 0),
+        "rejections": pipeline.get("rejected", 0),
+    }
+
+    # Applications table (all, sorted by most recent)
+    app_table = []
+    for app_row in sorted(applications, key=lambda a: a.updated_at or a.created_at, reverse=True):
+        # Find matching assessment for report link
+        linked_assessment = None
+        if app_row.assessment_id:
+            linked_assessment = db.query(Assessment).filter(Assessment.id == app_row.assessment_id).first()
+        app_table.append({
+            "id": app_row.id,
+            "job_title": app_row.job_title,
+            "company": app_row.company,
+            "match_score": app_row.match_score,
+            "status": app_row.status,
+            "date": (app_row.updated_at or app_row.created_at).strftime("%b %d, %Y"),
+            "assessment_id": linked_assessment.id if linked_assessment else None,
+        })
+
+    # Recent activity feed
+    activities = db.query(ActivityLog).filter(
+        ActivityLog.user_id == user.id
+    ).order_by(ActivityLog.created_at.desc()).limit(15).all()
+    activity_feed = []
+    for act in activities:
+        activity_feed.append({
+            "action": act.action,
+            "detail": act.detail,
+            "time": act.created_at.strftime("%b %d, %H:%M"),
+        })
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "profile_ready": profile_ready,
@@ -160,6 +206,10 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
         "has_assessment": has_assessment,
         "current_step": current_step,
         "assessments": out,
+        "kpis": kpis,
+        "pipeline": pipeline,
+        "app_table": app_table,
+        "activity_feed": activity_feed,
     })
 
 @app.get("/profile/upload", response_class=HTMLResponse)
@@ -228,6 +278,11 @@ def upload_post(
         prof.extraction["availability"] = availability.strip()
 
     db.add(prof)
+    db.add(ActivityLog(
+        user_id=user.id,
+        action="profile_uploaded",
+        detail="Uploaded CV and profile data",
+    ))
     db.commit()
 
     return RedirectResponse("/dashboard", status_code=303)
@@ -273,34 +328,43 @@ def jobs_page(request: Request, user: User = Depends(get_current_user), db: Sess
 
 @app.get("/api/jobs/search")
 async def api_jobs_search(q: str = Query(""), user: User = Depends(get_current_user)):
+    """Search Greenhouse + Lever for matching structured jobs."""
     result = await search_jobs(q)
-    return JSONResponse(content=result)
-
-@app.get("/api/jobs/extract")
-async def api_jobs_extract(url: str = Query(""), user: User = Depends(get_current_user)):
-    """Fetch and extract structured job data from a real job posting URL."""
-    result = await extract_job_from_url(url)
     return JSONResponse(content=result)
 
 @app.post("/jobs/from-search", response_class=HTMLResponse)
 async def create_job_from_search(
     request: Request,
-    url: str = Form(""),
-    title: str = Form(""),
-    company: str = Form(""),
+    job_json: str = Form(""),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Extract real job content from URL, create a Job record, and assess."""
-    # Extract real job content from source URL
-    extracted = None
-    if url:
-        extracted = await extract_job_from_url(url)
+    """Receive a structured provider job, extract skills, create Job, and assess."""
+    import json
+
+    # Parse the provider job object sent from the frontend
+    provider_job = None
+    try:
+        if job_json:
+            provider_job = json.loads(job_json)
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    if not provider_job or not provider_job.get("title"):
+        jobs = db.query(Job).filter(Job.active == True).all()
+        return templates.TemplateResponse("jobs.html", {
+            "request": request, "jobs": jobs,
+            "error": "Invalid job data. Please try selecting a different job.",
+            "search_enabled": True,
+        })
+
+    # Extract skills and sections from the structured job description
+    extracted = extract_from_structured_job(provider_job)
 
     if extracted and extracted.get("quality_sufficient"):
         job = Job(
-            title=(extracted.get("title") or title)[:200],
-            company=(extracted.get("company") or company)[:200],
+            title=(extracted.get("title") or provider_job.get("title", ""))[:200],
+            company=(extracted.get("company") or provider_job.get("company", ""))[:200],
             location_policy=extracted.get("location_policy", "onsite"),
             required_skills=extracted.get("required_skills", []),
             nice_to_have_skills=extracted.get("nice_to_have_skills", []),
@@ -309,18 +373,16 @@ async def create_job_from_search(
             active=True,
         )
     else:
-        # Quality guardrail: not enough info for a reliable report
+        # Even structured jobs can have thin descriptions — handle gracefully
         jobs = db.query(Job).filter(Job.active == True).all()
         reason = ""
-        if extracted and extracted.get("error"):
-            reason = extracted["error"]
-        elif extracted and extracted.get("quality_reasons"):
+        if extracted and extracted.get("quality_reasons"):
             reason = ", ".join(extracted["quality_reasons"])
         else:
             reason = "insufficient job content"
         return templates.TemplateResponse("jobs.html", {
             "request": request, "jobs": jobs,
-            "error": f"This posting could not be analyzed ({reason}). Please choose a different job from the search results.",
+            "error": f"This posting has too little content for a reliable assessment ({reason}). Please choose a different job.",
             "search_enabled": True,
         })
 
@@ -431,6 +493,34 @@ def assess_job(
     db.commit()
     db.refresh(assessment)
 
+    # Auto-create Application entry for the pipeline
+    existing_app = db.query(Application).filter(
+        Application.user_id == user.id,
+        Application.job_id == job.id,
+    ).first()
+    if existing_app:
+        existing_app.assessment_id = assessment.id
+        existing_app.match_score = res.match_score
+    else:
+        new_app = Application(
+            user_id=user.id,
+            assessment_id=assessment.id,
+            job_id=job.id,
+            status="saved",
+            job_title=job.title[:200],
+            company=job.company[:200],
+            match_score=res.match_score,
+        )
+        db.add(new_app)
+
+    # Log activity
+    db.add(ActivityLog(
+        user_id=user.id,
+        action="report_created",
+        detail=f"Generated report for {job.title} at {job.company} — {res.match_score}% match",
+    ))
+    db.commit()
+
     # Format fits/risks for display with full SOCLAW dimension names
     dim_names = {"S": "Skill", "O": "Ownership", "C": "Context", "L": "Location", "A": "Adaptability", "W": "Work style"}
     fits_text = "\n".join(f"  {dim_names.get(k, k)}: {v:.1f}%" for k, v in res.fits.items())
@@ -487,3 +577,34 @@ def apply_page(
         "job": job,
         "user_email": user.email,
     })
+
+@app.post("/api/applications/{app_id}/status")
+def update_application_status(
+    app_id: int,
+    status: str = Form(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update an application's pipeline status."""
+    if status not in APPLICATION_STATUSES:
+        return JSONResponse({"error": "Invalid status."}, status_code=400)
+
+    app_row = db.query(Application).filter(
+        Application.id == app_id,
+        Application.user_id == user.id,
+    ).first()
+    if not app_row:
+        return JSONResponse({"error": "Application not found."}, status_code=404)
+
+    old_status = app_row.status
+    app_row.status = status
+    app_row.updated_at = utcnow()
+
+    db.add(ActivityLog(
+        user_id=user.id,
+        action="status_changed",
+        detail=f"{app_row.job_title} at {app_row.company}: {old_status} → {status}",
+    ))
+    db.commit()
+
+    return JSONResponse({"ok": True, "new_status": status})
