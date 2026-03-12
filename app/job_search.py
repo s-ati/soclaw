@@ -134,18 +134,37 @@ async def search_jobs(query: str, num: int = 10) -> dict:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(GOOGLE_SEARCH_URL, params=params)
 
-        if resp.status_code == 403:
-            return {"results": [], "error": "Google API key invalid or quota exceeded."}
+        # Try to parse as JSON first (Google API errors are JSON)
+        error_detail = None
+        try:
+            data = resp.json()
+        except Exception:
+            data = None
+            # HTML error page — likely a network/proxy block, not a Google API error
+            if resp.status_code == 403:
+                error_detail = ("Network blocked access to Google APIs. "
+                                "This may be a firewall or proxy restriction.")
+
         if resp.status_code != 200:
+            if error_detail:
+                return {"results": [], "error": error_detail}
+            # Structured Google API error
+            if data and "error" in data:
+                msg = data["error"].get("message", "Unknown error")
+                code = data["error"].get("code", resp.status_code)
+                return {"results": [], "error": f"Google API error {code}: {msg}"}
             return {"results": [], "error": f"Google API returned status {resp.status_code}."}
 
-        data = resp.json()
-        items = data.get("items", [])
+        if data is None:
+            return {"results": [], "error": "Invalid response from Google API."}
 
+        items = data.get("items", [])
         results = [normalize_result(item) for item in items]
         return {"results": results, "error": None}
 
     except httpx.TimeoutException:
         return {"results": [], "error": "Search request timed out. Please try again."}
+    except httpx.ConnectError:
+        return {"results": [], "error": "Could not connect to Google APIs. Check your network connection."}
     except Exception as e:
         return {"results": [], "error": f"Search failed: {str(e)}"}
