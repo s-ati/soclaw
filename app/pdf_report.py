@@ -370,7 +370,8 @@ class _Renderer:
         self._gap(14)
 
     def draw_title_block(self):
-        self._text("Corporate Internship Risk Assessment",
+        role = self.d["job"].get("title", "Role")
+        self._text(f"{role} — Fit Assessment",
                     font="Helvetica-Bold", size=16, color=NAVY)
         self._gap(10)
 
@@ -818,7 +819,8 @@ def generate_pdf(
     }
 
     c = canvas_mod.Canvas(out_path, pagesize=A4)
-    c.setTitle("SOCLAW \u2014 Corporate Internship Risk Assessment")
+    role_title = (job or {}).get("title", "Role")
+    c.setTitle(f"SOCLAW \u2014 {role_title} Fit Assessment")
     c.setAuthor("SOCLAW Scoring Engine")
 
     r = _Renderer(c, data)
