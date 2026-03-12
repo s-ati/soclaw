@@ -4,11 +4,19 @@ Both APIs are free, require no API keys, and return real structured job data.
 This module handles fetching, normalization, and keyword-based filtering.
 """
 
+import asyncio
 import re
+import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 
 import httpx
+
+# ---------------------------------------------------------------------------
+# In-memory cache for fetched jobs (avoids re-fetching on every search)
+# ---------------------------------------------------------------------------
+_job_cache: dict = {"jobs": [], "ts": 0.0}
+_CACHE_TTL = 300  # 5 minutes
 
 # ---------------------------------------------------------------------------
 # Source configuration — add companies here to expand the searchable universe
@@ -318,8 +326,11 @@ def _match_score(job: dict, query_terms: list[str]) -> float:
     return min(100.0, score)
 
 
-def filter_and_rank(jobs: list[dict], query: str, limit: int = 12) -> list[dict]:
-    """Filter jobs by query and rank by relevance."""
+def filter_and_rank(jobs: list[dict], query: str, limit: int = 20, offset: int = 0) -> tuple[list[dict], int]:
+    """Filter jobs by query and rank by relevance.
+
+    Returns (page_of_jobs, total_matched) so callers can implement pagination.
+    """
     terms = [t.strip().lower() for t in query.split() if t.strip()]
 
     scored = []
@@ -329,7 +340,9 @@ def filter_and_rank(jobs: list[dict], query: str, limit: int = 12) -> list[dict]
             scored.append((s, job))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    return [job for _, job in scored[:limit]]
+    total = len(scored)
+    page = [job for _, job in scored[offset:offset + limit]]
+    return page, total
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +350,15 @@ def filter_and_rank(jobs: list[dict], query: str, limit: int = 12) -> list[dict]
 # ---------------------------------------------------------------------------
 
 async def fetch_all_jobs() -> list[dict]:
-    """Fetch jobs from all configured Greenhouse and Lever sources."""
+    """Fetch jobs from all configured Greenhouse and Lever sources in parallel.
+
+    Uses an in-memory cache (TTL 5 min) to avoid re-fetching on every search.
+    All provider requests run concurrently via asyncio.gather for speed.
+    """
+    # Return cached results if still fresh
+    if _job_cache["jobs"] and (time.time() - _job_cache["ts"]) < _CACHE_TTL:
+        return _job_cache["jobs"]
+
     all_jobs: list[dict] = []
 
     async with httpx.AsyncClient(
@@ -345,44 +366,47 @@ async def fetch_all_jobs() -> list[dict]:
         follow_redirects=True,
         headers={"Accept": "application/json"},
     ) as client:
-        # Fetch from all sources — use individual try/except so one failure
-        # doesn't block others
+        # Build all fetch tasks and run them concurrently
+        tasks = []
         for board in GREENHOUSE_BOARDS:
-            try:
-                jobs = await fetch_greenhouse(board["token"], board["company"], client)
-                all_jobs.extend(jobs)
-            except Exception:
-                pass
-
+            tasks.append(fetch_greenhouse(board["token"], board["company"], client))
         for site in LEVER_SITES:
-            try:
-                jobs = await fetch_lever(site["slug"], site["company"], client)
-                all_jobs.extend(jobs)
-            except Exception:
-                pass
+            tasks.append(fetch_lever(site["slug"], site["company"], client))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for result in results:
+            if isinstance(result, list):
+                all_jobs.extend(result)
+            # Exceptions are silently ignored (same as before)
+
+    # Update cache
+    _job_cache["jobs"] = all_jobs
+    _job_cache["ts"] = time.time()
 
     return all_jobs
 
 
-async def search_structured_jobs(query: str, limit: int = 12) -> dict:
-    """Fetch from all providers, filter by query, return ranked results."""
+async def search_structured_jobs(query: str, limit: int = 20, offset: int = 0) -> dict:
+    """Fetch from all providers, filter by query, return ranked results with pagination."""
     if not query or not query.strip():
-        return {"results": [], "error": "Search query is required."}
+        return {"results": [], "total": 0, "error": "Search query is required."}
 
     try:
         all_jobs = await fetch_all_jobs()
     except Exception as e:
-        return {"results": [], "error": f"Could not fetch job listings: {str(e)}"}
+        return {"results": [], "total": 0, "error": f"Could not fetch job listings: {str(e)}"}
 
     if not all_jobs:
-        return {"results": [], "error": "No job listings available from configured sources. Please try again later."}
+        return {"results": [], "total": 0, "error": "No job listings available from configured sources. Please try again later."}
 
-    results = filter_and_rank(all_jobs, query.strip(), limit)
+    results, total = filter_and_rank(all_jobs, query.strip(), limit, offset)
 
     if not results:
         return {
             "results": [],
+            "total": total,
             "error": "No matching jobs found. Try broader terms like 'analyst' or 'intern'.",
         }
 
-    return {"results": results, "error": None}
+    return {"results": results, "total": total, "error": None}

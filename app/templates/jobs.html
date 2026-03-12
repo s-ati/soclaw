@@ -27,6 +27,16 @@
   .chevron-icon.rotated { transform: rotate(180deg); }
   @keyframes pulse-subtle { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
   .skeleton-pulse { animation: pulse-subtle 1.5s ease-in-out infinite; }
+
+  /* Preview panel slide-in */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .preview-animate { animation: slideUp 0.35s ease-out forwards; }
+
+  /* Score gauge */
+  .score-ring { transition: stroke-dashoffset 0.8s ease-out; }
 </style>
 
 <!-- Page Header -->
@@ -35,7 +45,7 @@
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
     Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">Real job postings from Greenhouse and Lever. Select any result for one-click assessment.</p>
+  <p class="text-white/40 mt-1 font-light">Search real job postings, preview your estimated fit, then generate a full report.</p>
 </div>
 
 {% if error %}
@@ -45,9 +55,15 @@
 </div>
 {% endif %}
 
-<!-- Search Section -->
+<!-- ═══════════════════════════════════════════════════════
+     STEP 1: SEARCH
+     ═══════════════════════════════════════════════════════ -->
 {% if search_enabled %}
-<div class="mb-8 card-premium rounded-lg p-6">
+<div id="search-section" class="mb-8 card-premium rounded-lg p-6">
+  <div class="flex items-center gap-2 mb-4">
+    <div class="w-6 h-6 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-xs font-bold text-gold-500">1</div>
+    <h2 class="text-sm font-semibold text-white/60">Search Jobs</h2>
+  </div>
   <div class="flex flex-col sm:flex-row gap-3">
     <div class="flex-1 relative">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -61,7 +77,7 @@
       Search
     </button>
   </div>
-  <p class="text-[11px] text-white/20 mt-2">Searching live postings from Greenhouse and Lever across 30 companies.</p>
+  <p class="text-[11px] text-white/20 mt-2">Searching live postings from Greenhouse and Lever across 30+ companies.</p>
 
   <div id="search-status" class="hidden mt-4">
     <div id="search-loading" class="hidden">
@@ -87,11 +103,141 @@
       <button onclick="clearSearch()" class="text-xs text-white/30 hover:text-white/60 transition-colors">Clear</button>
     </div>
     <div id="search-results-list" class="space-y-3"></div>
+
+    <!-- Load More Button -->
+    <div id="load-more-container" class="hidden mt-4 text-center">
+      <button onclick="loadMoreJobs()" id="load-more-btn"
+        class="inline-flex items-center gap-2 text-white/50 hover:text-gold-500 font-medium py-2.5 px-6 rounded-md border border-white/[0.08] hover:border-gold-500/30 hover:bg-gold-500/[0.04] transition-all text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <span id="load-more-text">Load More Results</span>
+      </button>
+    </div>
   </div>
 </div>
 {% endif %}
 
-<!-- Saved Jobs Section -->
+<!-- ═══════════════════════════════════════════════════════
+     STEP 2: PREVIEW (shown dynamically when a job is selected)
+     ═══════════════════════════════════════════════════════ -->
+<div id="preview-section" class="hidden mb-8">
+  <div class="card-premium rounded-lg p-6 border-gold-500/20 preview-animate">
+    <div class="flex items-center gap-2 mb-5">
+      <div class="w-6 h-6 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-xs font-bold text-gold-500">2</div>
+      <h2 class="text-sm font-semibold text-white/60">Job Preview &amp; Estimated Match</h2>
+    </div>
+
+    <!-- Preview loading state -->
+    <div id="preview-loading" class="hidden">
+      <div class="flex items-center gap-3 text-white/40 text-sm py-8 justify-center">
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        Analyzing job and estimating match...
+      </div>
+    </div>
+
+    <!-- Preview error state -->
+    <div id="preview-error" class="hidden bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 flex items-center gap-3">
+      <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p class="text-red-300 text-sm" id="preview-error-text"></p>
+    </div>
+
+    <!-- Preview content -->
+    <div id="preview-content" class="hidden">
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Left: Job Info -->
+        <div class="md:col-span-2 space-y-4">
+          <div>
+            <h3 id="preview-title" class="text-xl font-bold text-white mb-1"></h3>
+            <p id="preview-company" class="text-gold-500 font-medium text-sm mb-2"></p>
+            <div class="flex flex-wrap items-center gap-2" id="preview-badges"></div>
+          </div>
+
+          <div id="preview-summary-section">
+            <h4 class="text-xs font-semibold text-white/50 mb-1.5">Job Summary</h4>
+            <p id="preview-summary" class="text-xs text-white/40 leading-relaxed"></p>
+          </div>
+
+          <div id="preview-requirements-section">
+            <h4 class="text-xs font-semibold text-white/50 mb-2">Key Requirements</h4>
+            <div id="preview-requirements" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div id="preview-source-link" class="hidden">
+            <a id="preview-url" href="#" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-[11px] text-white/20 hover:text-gold-500/60 transition-colors">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              View original posting
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Score + Strengths/Gaps -->
+        <div class="space-y-4">
+          <!-- Score Gauge -->
+          <div id="preview-score-section" class="hidden text-center">
+            <div class="relative inline-block">
+              <svg class="w-28 h-28" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+                <circle id="preview-score-ring" class="score-ring" cx="60" cy="60" r="52" fill="none"
+                  stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="326.7" stroke-dashoffset="326.7"
+                  transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="preview-score-value" class="text-2xl font-extrabold text-white"></span>
+                <span class="text-[10px] text-white/30 uppercase tracking-wider">Match</span>
+              </div>
+            </div>
+            <div id="preview-recommendation" class="mt-2 text-xs font-semibold px-3 py-1 rounded-md inline-block"></div>
+          </div>
+
+          <!-- No profile notice -->
+          <div id="preview-no-profile" class="hidden text-center py-4">
+            <p class="text-white/30 text-xs leading-relaxed">Upload your CV and complete the questionnaire to see your estimated match score.</p>
+          </div>
+
+          <!-- Strengths -->
+          <div id="preview-strengths-section" class="hidden">
+            <h4 class="text-xs font-semibold text-green-400/80 mb-2 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Top Strengths
+            </h4>
+            <div id="preview-strengths" class="space-y-1"></div>
+          </div>
+
+          <!-- Gaps -->
+          <div id="preview-gaps-section" class="hidden">
+            <h4 class="text-xs font-semibold text-amber-400/80 mb-2 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+              Validation Areas
+            </h4>
+            <div id="preview-gaps" class="space-y-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-6 pt-5 border-t border-white/[0.06] flex flex-col sm:flex-row items-center gap-3">
+        <button onclick="closePreview()"
+          class="inline-flex items-center gap-2 text-white/40 hover:text-white/70 font-medium py-2.5 px-5 rounded-md border border-white/[0.08] hover:border-white/20 transition-all text-sm w-full sm:w-auto justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Choose Another Job
+        </button>
+        <form id="preview-generate-form" method="post" action="/jobs/from-search" onsubmit="handleReportGenerate(this)" class="w-full sm:w-auto">
+          <input type="hidden" name="job_json" id="preview-job-json" value="">
+          <button type="submit" id="generate-report-btn"
+            class="btn-gold inline-flex items-center gap-2 py-2.5 px-6 rounded-md text-sm font-medium w-full justify-center">
+            <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="btn-text">Generate Full Report</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PREVIOUSLY ASSESSED JOBS
+     ═══════════════════════════════════════════════════════ -->
 <div class="mb-4">
   <h2 class="text-lg font-semibold text-white/70 flex items-center gap-2">
     <svg class="w-5 h-5 text-gold-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -175,9 +321,23 @@
 {% endif %}
 
 <script>
-  // Store full job objects from search results so we can pass them to the backend
+  // ── State ──────────────────────────────────────────────
   var searchJobData = [];
+  var currentQuery = '';
+  var currentOffset = 0;
+  var currentTotal = 0;
+  var PAGE_SIZE = 20;
+  var selectedJobForPreview = null;
 
+  // ── Utility ────────────────────────────────────────────
+  function escapeHtml(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ── Toggle details (saved jobs) ────────────────────────
   function toggleDetails(jobId) {
     var panel = document.getElementById('details-' + jobId);
     var chevron = document.getElementById('chevron-' + jobId);
@@ -191,12 +351,18 @@
     btn.classList.add('opacity-75', 'cursor-not-allowed');
     var icon = btn.querySelector('.btn-icon');
     if (icon) icon.outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
-    btn.querySelector('.btn-text').textContent = 'Generating assessment...';
+    btn.querySelector('.btn-text').textContent = 'Generating report...';
   }
 
+  // ── STEP 1: Search ────────────────────────────────────
   function searchJobs() {
     var q = document.getElementById('job-search-input').value.trim();
     if (!q) return;
+
+    currentQuery = q;
+    currentOffset = 0;
+    searchJobData = [];
+
     var statusEl = document.getElementById('search-status');
     var loadingEl = document.getElementById('search-loading');
     var errorEl = document.getElementById('search-error');
@@ -208,19 +374,22 @@
     errorEl.classList.add('hidden');
     resultsEl.classList.add('hidden');
     listEl.innerHTML = '';
-    searchJobData = [];
 
     var btn = document.getElementById('search-btn');
     btn.disabled = true;
     btn.classList.add('opacity-75');
 
-    fetch('/api/jobs/search?q=' + encodeURIComponent(q))
+    // Close any open preview
+    closePreview();
+
+    fetch('/api/jobs/search?q=' + encodeURIComponent(q) + '&limit=' + PAGE_SIZE + '&offset=0')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         loadingEl.classList.add('hidden');
         btn.disabled = false;
         btn.classList.remove('opacity-75');
-        if (data.error) {
+
+        if (data.error && (!data.results || data.results.length === 0)) {
           errorEl.classList.remove('hidden');
           document.getElementById('search-error-text').textContent = data.error;
           return;
@@ -230,12 +399,17 @@
           document.getElementById('search-error-text').textContent = 'No matching jobs found. Try broader terms like "analyst" or "intern".';
           return;
         }
+
         searchJobData = data.results;
+        currentTotal = data.total || data.results.length;
+        currentOffset = data.results.length;
+
         resultsEl.classList.remove('hidden');
-        document.getElementById('search-results-count').textContent = data.results.length + ' Result' + (data.results.length === 1 ? '' : 's');
+        updateResultsCount();
         data.results.forEach(function(job, idx) {
           listEl.innerHTML += renderSearchResult(job, idx);
         });
+        updateLoadMoreButton();
       })
       .catch(function() {
         loadingEl.classList.add('hidden');
@@ -246,28 +420,70 @@
       });
   }
 
+  function loadMoreJobs() {
+    if (!currentQuery) return;
+
+    var loadBtn = document.getElementById('load-more-btn');
+    loadBtn.disabled = true;
+    document.getElementById('load-more-text').textContent = 'Loading...';
+
+    fetch('/api/jobs/search?q=' + encodeURIComponent(currentQuery) + '&limit=' + PAGE_SIZE + '&offset=' + currentOffset)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        loadBtn.disabled = false;
+        document.getElementById('load-more-text').textContent = 'Load More Results';
+
+        if (!data.results || data.results.length === 0) {
+          document.getElementById('load-more-container').classList.add('hidden');
+          return;
+        }
+
+        var listEl = document.getElementById('search-results-list');
+        var startIdx = searchJobData.length;
+        searchJobData = searchJobData.concat(data.results);
+        currentOffset += data.results.length;
+
+        data.results.forEach(function(job, i) {
+          listEl.innerHTML += renderSearchResult(job, startIdx + i);
+        });
+        updateResultsCount();
+        updateLoadMoreButton();
+      })
+      .catch(function() {
+        loadBtn.disabled = false;
+        document.getElementById('load-more-text').textContent = 'Load More Results';
+      });
+  }
+
+  function updateResultsCount() {
+    var shown = searchJobData.length;
+    var label = shown + ' of ' + currentTotal + ' result' + (currentTotal === 1 ? '' : 's');
+    document.getElementById('search-results-count').textContent = label;
+  }
+
+  function updateLoadMoreButton() {
+    var container = document.getElementById('load-more-container');
+    if (currentOffset < currentTotal) {
+      container.classList.remove('hidden');
+      var remaining = currentTotal - currentOffset;
+      document.getElementById('load-more-text').textContent = 'Load More (' + remaining + ' remaining)';
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+
   function clearSearch() {
     document.getElementById('search-status').classList.add('hidden');
     document.getElementById('search-results').classList.add('hidden');
     document.getElementById('search-results-list').innerHTML = '';
     document.getElementById('job-search-input').value = '';
     searchJobData = [];
+    currentOffset = 0;
+    currentTotal = 0;
+    closePreview();
   }
 
-  function escapeHtml(s) {
-    if (!s) return '';
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  function toggleSearchDetails(idx) {
-    var panel = document.getElementById('sr-details-' + idx);
-    var chevron = document.getElementById('sr-chevron-' + idx);
-    panel.classList.toggle('open');
-    chevron.classList.toggle('rotated');
-  }
-
+  // ── Badge helpers ──────────────────────────────────────
   function sourceBadge(source) {
     if (source === 'greenhouse') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Greenhouse</span>';
     if (source === 'lever') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Lever</span>';
@@ -285,6 +501,14 @@
     if (c === 'part_time') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Part-time</span>';
     if (c === 'contract') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Contract</span>';
     return '';
+  }
+
+  // ── Render search result card ──────────────────────────
+  function toggleSearchDetails(idx) {
+    var panel = document.getElementById('sr-details-' + idx);
+    var chevron = document.getElementById('sr-chevron-' + idx);
+    panel.classList.toggle('open');
+    chevron.classList.toggle('rotated');
   }
 
   function renderSearchResult(job, idx) {
@@ -325,22 +549,20 @@
     // Right: buttons
     h += '<div class="flex flex-col gap-2 flex-shrink-0">';
 
-    // Details button
+    // Details toggle
     h += '<button onclick="toggleSearchDetails(' + idx + ')" type="button"';
     h += ' class="inline-flex items-center gap-2 text-white/40 hover:text-gold-500 font-medium py-2 px-4 rounded-md border border-white/[0.08] hover:border-gold-500/30 hover:bg-gold-500/[0.04] transition-all text-sm">';
     h += 'Details <svg id="sr-chevron-' + idx + '" class="w-4 h-4 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
     h += '</button>';
 
-    // Select button — sends full job object as JSON
-    h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
-    h += '<input type="hidden" name="job_json" value="' + escapeHtml(JSON.stringify(job)) + '">';
-    h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
-    h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-    h += '<span class="btn-text">Select Job</span></button></form>';
+    // Preview button (instead of direct Select Job)
+    h += '<button onclick="openPreview(' + idx + ')" class="btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
+    h += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+    h += 'Preview Match</button>';
 
     h += '</div></div>';
 
-    // Expandable details panel — pre-populated with real structured content
+    // Expandable details
     h += '<div id="sr-details-' + idx + '" class="details-panel border-t border-white/[0.06] mt-3">';
     h += renderJobDetails(job);
     h += '</div>';
@@ -351,8 +573,6 @@
 
   function renderJobDetails(job) {
     var h = '';
-
-    // Description preview
     if (job.description) {
       var desc = job.description.substring(0, 800);
       h += '<div class="mb-3">';
@@ -360,8 +580,6 @@
       h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(desc) + (job.description.length > 800 ? '...' : '') + '</p>';
       h += '</div>';
     }
-
-    // Requirements
     if (job.requirements) {
       var req = job.requirements.substring(0, 600);
       h += '<div class="mb-3">';
@@ -369,8 +587,6 @@
       h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(req) + (job.requirements.length > 600 ? '...' : '') + '</p>';
       h += '</div>';
     }
-
-    // Responsibilities
     if (job.responsibilities) {
       var resp = job.responsibilities.substring(0, 600);
       h += '<div class="mb-3">';
@@ -378,12 +594,184 @@
       h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(resp) + (job.responsibilities.length > 600 ? '...' : '') + '</p>';
       h += '</div>';
     }
-
     if (!job.description && !job.requirements && !job.responsibilities) {
       h += '<p class="text-white/20 text-xs py-2">No detailed content available for this posting.</p>';
     }
-
     return h;
+  }
+
+  // ── STEP 2: Preview ───────────────────────────────────
+  function openPreview(idx) {
+    var job = searchJobData[idx];
+    if (!job) return;
+
+    selectedJobForPreview = job;
+
+    var previewSection = document.getElementById('preview-section');
+    var previewLoading = document.getElementById('preview-loading');
+    var previewError = document.getElementById('preview-error');
+    var previewContent = document.getElementById('preview-content');
+
+    previewSection.classList.remove('hidden');
+    previewLoading.classList.remove('hidden');
+    previewError.classList.add('hidden');
+    previewContent.classList.add('hidden');
+
+    // Scroll to preview
+    previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Call preview API
+    fetch('/api/jobs/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_json: job })
+    })
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || 'Preview failed'); });
+      return r.json();
+    })
+    .then(function(data) {
+      previewLoading.classList.add('hidden');
+
+      if (data.error) {
+        previewError.classList.remove('hidden');
+        document.getElementById('preview-error-text').textContent = data.error;
+        return;
+      }
+
+      renderPreview(data.preview, job);
+      previewContent.classList.remove('hidden');
+    })
+    .catch(function(err) {
+      previewLoading.classList.add('hidden');
+      previewError.classList.remove('hidden');
+      document.getElementById('preview-error-text').textContent = err.message || 'Failed to load preview. Please try again.';
+    });
+  }
+
+  function renderPreview(preview, originalJob) {
+    // Job info
+    document.getElementById('preview-title').textContent = preview.title;
+    document.getElementById('preview-company').textContent = preview.company;
+
+    // Badges
+    var badgesEl = document.getElementById('preview-badges');
+    badgesEl.innerHTML = '';
+    if (preview.location) badgesEl.innerHTML += '<span class="text-white/30 text-xs">' + escapeHtml(preview.location) + '</span>';
+    badgesEl.innerHTML += workModeBadge(preview.work_mode);
+    var cb = commitmentBadge(preview.commitment);
+    if (cb) badgesEl.innerHTML += cb;
+
+    // Summary
+    var summarySection = document.getElementById('preview-summary-section');
+    if (preview.summary) {
+      summarySection.classList.remove('hidden');
+      document.getElementById('preview-summary').textContent = preview.summary;
+    } else {
+      summarySection.classList.add('hidden');
+    }
+
+    // Key requirements
+    var reqSection = document.getElementById('preview-requirements-section');
+    var reqEl = document.getElementById('preview-requirements');
+    reqEl.innerHTML = '';
+    if (preview.key_requirements && preview.key_requirements.length > 0) {
+      reqSection.classList.remove('hidden');
+      preview.key_requirements.forEach(function(req) {
+        var isNice = req.indexOf('(nice to have)') !== -1;
+        var cls = isNice
+          ? 'bg-white/[0.04] text-white/40 border border-white/[0.08]'
+          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+        reqEl.innerHTML += '<span class="px-2 py-0.5 rounded text-xs font-medium ' + cls + '">' + escapeHtml(req) + '</span>';
+      });
+    } else {
+      reqSection.classList.add('hidden');
+    }
+
+    // Source URL
+    var sourceLinkEl = document.getElementById('preview-source-link');
+    if (preview.source_url) {
+      sourceLinkEl.classList.remove('hidden');
+      document.getElementById('preview-url').href = preview.source_url;
+    } else {
+      sourceLinkEl.classList.add('hidden');
+    }
+
+    // Score
+    var scoreSection = document.getElementById('preview-score-section');
+    var noProfileEl = document.getElementById('preview-no-profile');
+
+    if (preview.has_profile && preview.estimated_score !== null) {
+      scoreSection.classList.remove('hidden');
+      noProfileEl.classList.add('hidden');
+
+      var score = preview.estimated_score;
+      document.getElementById('preview-score-value').textContent = score + '%';
+
+      // Animate ring
+      var circumference = 326.7;
+      var offset = circumference - (circumference * score / 100);
+      var ring = document.getElementById('preview-score-ring');
+      ring.style.stroke = score >= 75 ? '#22c55e' : score >= 60 ? '#d4af37' : score >= 40 ? '#f59e0b' : '#ef4444';
+      // Reset and animate
+      ring.style.strokeDashoffset = circumference;
+      setTimeout(function() { ring.style.strokeDashoffset = offset; }, 50);
+
+      // Recommendation badge
+      var recEl = document.getElementById('preview-recommendation');
+      recEl.textContent = preview.recommendation;
+      if (score >= 75) { recEl.className = 'mt-2 text-xs font-semibold px-3 py-1 rounded-md inline-block bg-green-500/10 text-green-400 border border-green-500/20'; }
+      else if (score >= 60) { recEl.className = 'mt-2 text-xs font-semibold px-3 py-1 rounded-md inline-block bg-gold-500/10 text-gold-400 border border-gold-500/20'; }
+      else if (score >= 40) { recEl.className = 'mt-2 text-xs font-semibold px-3 py-1 rounded-md inline-block bg-amber-500/10 text-amber-400 border border-amber-500/20'; }
+      else { recEl.className = 'mt-2 text-xs font-semibold px-3 py-1 rounded-md inline-block bg-red-500/10 text-red-400 border border-red-500/20'; }
+    } else {
+      scoreSection.classList.add('hidden');
+      noProfileEl.classList.remove('hidden');
+    }
+
+    // Strengths
+    var strengthsSection = document.getElementById('preview-strengths-section');
+    var strengthsEl = document.getElementById('preview-strengths');
+    strengthsEl.innerHTML = '';
+    if (preview.top_strengths && preview.top_strengths.length > 0) {
+      strengthsSection.classList.remove('hidden');
+      preview.top_strengths.forEach(function(s) {
+        strengthsEl.innerHTML += '<div class="flex items-center justify-between text-xs"><span class="text-white/50">' + escapeHtml(s.dimension) + '</span><span class="text-green-400 font-medium">' + s.score + '%</span></div>';
+      });
+    } else {
+      strengthsSection.classList.add('hidden');
+    }
+
+    // Gaps
+    var gapsSection = document.getElementById('preview-gaps-section');
+    var gapsEl = document.getElementById('preview-gaps');
+    gapsEl.innerHTML = '';
+    if (preview.top_gaps && preview.top_gaps.length > 0) {
+      gapsSection.classList.remove('hidden');
+      preview.top_gaps.forEach(function(g) {
+        gapsEl.innerHTML += '<div class="flex items-center justify-between text-xs"><span class="text-white/50">' + escapeHtml(g.dimension) + '</span><span class="text-amber-400 font-medium">' + g.score + '%</span></div>';
+      });
+    } else {
+      gapsSection.classList.add('hidden');
+    }
+
+    // Set the hidden form field for report generation
+    document.getElementById('preview-job-json').value = JSON.stringify(originalJob);
+  }
+
+  function closePreview() {
+    document.getElementById('preview-section').classList.add('hidden');
+    selectedJobForPreview = null;
+  }
+
+  // ── STEP 3: Generate Report ───────────────────────────
+  function handleReportGenerate(form) {
+    var btn = document.getElementById('generate-report-btn');
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    var icon = btn.querySelector('.btn-icon');
+    if (icon) icon.outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+    btn.querySelector('.btn-text').textContent = 'Generating full report...';
   }
 </script>
 

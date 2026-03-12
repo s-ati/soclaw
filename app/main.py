@@ -327,10 +327,173 @@ def jobs_page(request: Request, user: User = Depends(get_current_user), db: Sess
     })
 
 @app.get("/api/jobs/search")
-async def api_jobs_search(q: str = Query(""), user: User = Depends(get_current_user)):
-    """Search Greenhouse + Lever for matching structured jobs."""
-    result = await search_jobs(q)
+async def api_jobs_search(
+    q: str = Query(""),
+    limit: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    user: User = Depends(get_current_user),
+):
+    """Search Greenhouse + Lever for matching structured jobs with pagination."""
+    result = await search_jobs(q, num=limit, offset=offset)
     return JSONResponse(content=result)
+
+def _normalize_provider_job(raw: str | dict) -> dict | None:
+    """Parse and normalize a provider job object from the frontend.
+
+    Handles JSON strings, double-encoded strings, and dict inputs.
+    Returns a clean dict with at least a title, or None if invalid.
+    """
+    import json
+
+    if not raw:
+        return None
+
+    provider_job = raw
+    # If it's a string, parse JSON (handle double-encoding)
+    if isinstance(provider_job, str):
+        try:
+            provider_job = json.loads(provider_job)
+        except (json.JSONDecodeError, TypeError):
+            return None
+        # Handle double-encoded JSON
+        if isinstance(provider_job, str):
+            try:
+                provider_job = json.loads(provider_job)
+            except (json.JSONDecodeError, TypeError):
+                return None
+
+    if not isinstance(provider_job, dict):
+        return None
+
+    # Must have at least a title
+    if not provider_job.get("title"):
+        return None
+
+    # Normalize key fields to ensure they exist with correct types
+    provider_job.setdefault("company", "Unknown")
+    provider_job.setdefault("location", "")
+    provider_job.setdefault("work_mode", "onsite")
+    provider_job.setdefault("description", "")
+    provider_job.setdefault("requirements", "")
+    provider_job.setdefault("responsibilities", "")
+    provider_job.setdefault("commitment", "full_time")
+    provider_job.setdefault("source", "")
+    provider_job.setdefault("source_url", "")
+    provider_job.setdefault("department", "")
+
+    # Ensure strings
+    for key in ["title", "company", "location", "work_mode", "description",
+                 "requirements", "responsibilities", "source", "source_url"]:
+        if not isinstance(provider_job.get(key), str):
+            provider_job[key] = str(provider_job.get(key, "") or "")
+
+    return provider_job
+
+
+@app.post("/api/jobs/preview")
+async def api_jobs_preview(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Preview a job: validate, extract skills, compute estimated match score.
+
+    Returns a JSON preview with job summary, strengths, gaps, and estimated
+    match score — without generating a full PDF report.
+    """
+    import json
+
+    body = await request.json()
+    job_json = body.get("job_json", "")
+
+    provider_job = _normalize_provider_job(job_json)
+    if not provider_job:
+        return JSONResponse({"error": "Invalid job data. Please try a different job."}, status_code=400)
+
+    # Extract skills and sections
+    extracted = extract_from_structured_job(provider_job)
+
+    if not extracted or not extracted.get("quality_sufficient"):
+        reason = ", ".join(extracted.get("quality_reasons", [])) if extracted else "insufficient job content"
+        return JSONResponse({
+            "error": f"This posting has too little content for assessment ({reason}). Try a different job.",
+        }, status_code=400)
+
+    # Build job dict for scoring
+    job_dict = {
+        "title": (extracted.get("title") or provider_job.get("title", ""))[:200],
+        "company": (extracted.get("company") or provider_job.get("company", ""))[:200],
+        "location_policy": extracted.get("location_policy", "onsite"),
+        "required_skills": extracted.get("required_skills", []),
+        "nice_to_have_skills": extracted.get("nice_to_have_skills", []),
+        "weights": DEFAULT_WEIGHTS_CORP_INTERN,
+    }
+
+    # Try to compute estimated match score if user has profile + questionnaire
+    profile = db.query(CandidateProfile).filter(
+        CandidateProfile.user_id == user.id
+    ).order_by(CandidateProfile.created_at.desc()).first()
+
+    estimated_score = None
+    recommendation = None
+    top_strengths = []
+    top_gaps = []
+
+    if profile and profile.extraction and profile.questionnaire and len(profile.questionnaire.keys()) == 8:
+        remote_only = bool(profile.extraction.get("remote_only", False))
+        res = compute_soclaw(
+            extraction=profile.extraction,
+            questionnaire=profile.questionnaire,
+            linkedin_url=profile.linkedin_url,
+            job=job_dict,
+            remote_only=remote_only,
+        )
+        estimated_score = res.match_score
+        recommendation = res.recommendation
+
+        # Top strengths: dimensions with highest fit scores
+        dim_names = {"S": "Skills", "O": "Ownership", "C": "Context", "L": "Location", "A": "Adaptability", "W": "Work Style"}
+        fits_sorted = sorted(res.fits.items(), key=lambda kv: kv[1], reverse=True)
+        for dim, val in fits_sorted[:3]:
+            if val >= 50:
+                top_strengths.append({"dimension": dim_names[dim], "score": round(val, 1)})
+
+        # Top gaps: dimensions with highest risk scores
+        risks_sorted = sorted(res.risks.items(), key=lambda kv: kv[1], reverse=True)
+        for dim, val in risks_sorted[:3]:
+            if val >= 40:
+                top_gaps.append({"dimension": dim_names[dim], "score": round(val, 1)})
+
+    # Build key requirements summary
+    key_requirements = []
+    for s in extracted.get("required_skills", [])[:6]:
+        key_requirements.append(s["name"].replace("_", " ").title())
+    for s in extracted.get("nice_to_have_skills", [])[:3]:
+        key_requirements.append(s["name"].replace("_", " ").title() + " (nice to have)")
+
+    # Short job summary from description
+    desc = extracted.get("description", "")
+    summary = desc[:300].rsplit(" ", 1)[0] + "..." if len(desc) > 300 else desc
+
+    return JSONResponse({
+        "preview": {
+            "title": job_dict["title"],
+            "company": job_dict["company"],
+            "location": provider_job.get("location", ""),
+            "work_mode": extracted.get("location_policy", "onsite"),
+            "commitment": provider_job.get("commitment", "full_time"),
+            "summary": summary,
+            "key_requirements": key_requirements,
+            "source_url": provider_job.get("source_url", ""),
+            "estimated_score": estimated_score,
+            "recommendation": recommendation,
+            "top_strengths": top_strengths,
+            "top_gaps": top_gaps,
+            "has_profile": bool(profile and profile.extraction and profile.questionnaire and len(profile.questionnaire.keys()) == 8),
+        },
+        "error": None,
+    })
+
 
 @app.post("/jobs/from-search", response_class=HTMLResponse)
 async def create_job_from_search(
@@ -339,18 +502,11 @@ async def create_job_from_search(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Receive a structured provider job, extract skills, create Job, and assess."""
-    import json
+    """Receive a validated provider job, create Job record, and start assessment."""
 
-    # Parse the provider job object sent from the frontend
-    provider_job = None
-    try:
-        if job_json:
-            provider_job = json.loads(job_json)
-    except (json.JSONDecodeError, TypeError):
-        pass
+    provider_job = _normalize_provider_job(job_json)
 
-    if not provider_job or not provider_job.get("title"):
+    if not provider_job:
         jobs = db.query(Job).filter(Job.active == True).all()
         return templates.TemplateResponse("jobs.html", {
             "request": request, "jobs": jobs,

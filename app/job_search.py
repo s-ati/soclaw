@@ -7,6 +7,6 @@ layer so the rest of the app doesn't need to know about individual sources.
 from .job_providers import search_structured_jobs
 
 
-async def search_jobs(query: str, num: int = 12) -> dict:
+async def search_jobs(query: str, num: int = 20, offset: int = 0) -> dict:
     """Search configured Greenhouse + Lever sources for matching jobs."""
-    return await search_structured_jobs(query, limit=num)
+    return await search_structured_jobs(query, limit=num, offset=offset)
