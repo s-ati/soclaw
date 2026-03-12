@@ -8,18 +8,20 @@
   }
   .job-card { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
   .job-card:nth-child(1) { animation-delay: 0s; }
-  .job-card:nth-child(2) { animation-delay: 0.08s; }
-  .job-card:nth-child(3) { animation-delay: 0.16s; }
-  .job-card:nth-child(4) { animation-delay: 0.24s; }
-  .job-card:nth-child(5) { animation-delay: 0.32s; }
-  .job-card:nth-child(6) { animation-delay: 0.40s; }
+  .job-card:nth-child(2) { animation-delay: 0.06s; }
+  .job-card:nth-child(3) { animation-delay: 0.12s; }
+  .job-card:nth-child(4) { animation-delay: 0.18s; }
+  .job-card:nth-child(5) { animation-delay: 0.24s; }
+  .job-card:nth-child(6) { animation-delay: 0.30s; }
+  .job-card:nth-child(7) { animation-delay: 0.36s; }
+  .job-card:nth-child(8) { animation-delay: 0.42s; }
   .details-panel {
     max-height: 0; overflow: hidden;
     transition: max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
     opacity: 0; padding-top: 0; padding-bottom: 0;
   }
   .details-panel.open {
-    max-height: 800px; opacity: 1; padding-top: 1rem; padding-bottom: 0.25rem;
+    max-height: 1200px; opacity: 1; padding-top: 1rem; padding-bottom: 0.25rem;
   }
   .chevron-icon { transition: transform 0.3s ease; }
   .chevron-icon.rotated { transform: rotate(180deg); }
@@ -31,9 +33,9 @@
 <div class="mb-8">
   <h1 class="text-3xl font-bold text-white flex items-center gap-3">
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-    Assessment-Ready Jobs
+    Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">We show jobs from verified sources that we can analyze reliably. Select any result for one-click assessment.</p>
+  <p class="text-white/40 mt-1 font-light">Real job postings from Greenhouse and Lever. Select any result for one-click assessment.</p>
 </div>
 
 {% if error %}
@@ -49,7 +51,7 @@
   <div class="flex flex-col sm:flex-row gap-3">
     <div class="flex-1 relative">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" id="job-search-input" placeholder="Search jobs... e.g. &quot;Data Analyst intern Berlin&quot;"
+      <input type="text" id="job-search-input" placeholder="Search jobs... e.g. &quot;data analyst intern&quot; or &quot;marketing&quot;"
         class="w-full pl-10 pr-4 py-3 rounded-md bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/30 focus:outline-none focus:border-gold-500/40 focus:ring-1 focus:ring-gold-500/20 text-sm"
         onkeydown="if(event.key==='Enter')searchJobs()">
     </div>
@@ -59,17 +61,18 @@
       Search
     </button>
   </div>
-  <p class="text-[11px] text-white/20 mt-2">Searches Greenhouse, Lever, Ashby, Workable, and direct company career pages.</p>
+  <p class="text-[11px] text-white/20 mt-2">Searching live postings from Greenhouse and Lever across 30 companies.</p>
 
   <div id="search-status" class="hidden mt-4">
     <div id="search-loading" class="hidden">
       <div class="flex items-center gap-3 text-white/40 text-sm">
         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-        Searching supported sources...
+        Fetching from Greenhouse and Lever...
       </div>
       <div class="mt-4 space-y-3">
         <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]"></div>
         <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.3s"></div>
+        <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.6s"></div>
       </div>
     </div>
     <div id="search-error" class="hidden bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 flex items-center gap-3">
@@ -80,7 +83,7 @@
 
   <div id="search-results" class="hidden mt-4">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-sm font-semibold text-white/60">Search Results</h3>
+      <h3 class="text-sm font-semibold text-white/60" id="search-results-count">Search Results</h3>
       <button onclick="clearSearch()" class="text-xs text-white/30 hover:text-white/60 transition-colors">Clear</button>
     </div>
     <div id="search-results-list" class="space-y-3"></div>
@@ -92,7 +95,7 @@
 <div class="mb-4">
   <h2 class="text-lg font-semibold text-white/70 flex items-center gap-2">
     <svg class="w-5 h-5 text-gold-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-    Saved Jobs
+    Previously Assessed Jobs
   </h2>
 </div>
 
@@ -121,7 +124,7 @@
           <form method="post" action="/assess/{{ j.id }}" onsubmit="handleJobSubmit(this)">
             <button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm">
               <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-              <span class="btn-text">Select Job</span>
+              <span class="btn-text">Re-assess</span>
             </button>
           </form>
         </div>
@@ -167,13 +170,13 @@
 
 {% if not jobs %}
 <div class="text-center py-12">
-  <p class="text-white/20">No saved jobs yet. Use the search above to find assessment-ready postings.</p>
+  <p class="text-white/20">No assessed jobs yet. Use the search above to find and assess real job postings.</p>
 </div>
 {% endif %}
 
 <script>
-  // Cache for extracted job details
-  var extractCache = {};
+  // Store full job objects from search results so we can pass them to the backend
+  var searchJobData = [];
 
   function toggleDetails(jobId) {
     var panel = document.getElementById('details-' + jobId);
@@ -186,7 +189,8 @@
     var btn = form.querySelector('.job-select-btn');
     btn.disabled = true;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
-    btn.querySelector('.btn-icon').outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+    var icon = btn.querySelector('.btn-icon');
+    if (icon) icon.outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
     btn.querySelector('.btn-text').textContent = 'Generating assessment...';
   }
 
@@ -204,6 +208,7 @@
     errorEl.classList.add('hidden');
     resultsEl.classList.add('hidden');
     listEl.innerHTML = '';
+    searchJobData = [];
 
     var btn = document.getElementById('search-btn');
     btn.disabled = true;
@@ -222,10 +227,12 @@
         }
         if (!data.results || data.results.length === 0) {
           errorEl.classList.remove('hidden');
-          document.getElementById('search-error-text').textContent = 'No assessment-ready postings found. Try adding a company name or a more specific role title.';
+          document.getElementById('search-error-text').textContent = 'No matching jobs found. Try broader terms like "analyst" or "intern".';
           return;
         }
+        searchJobData = data.results;
         resultsEl.classList.remove('hidden');
+        document.getElementById('search-results-count').textContent = data.results.length + ' Result' + (data.results.length === 1 ? '' : 's');
         data.results.forEach(function(job, idx) {
           listEl.innerHTML += renderSearchResult(job, idx);
         });
@@ -244,116 +251,40 @@
     document.getElementById('search-results').classList.add('hidden');
     document.getElementById('search-results-list').innerHTML = '';
     document.getElementById('job-search-input').value = '';
-    extractCache = {};
+    searchJobData = [];
   }
 
   function escapeHtml(s) {
+    if (!s) return '';
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
   }
 
-  function locationBadge(p) {
-    if (p === 'remote') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>';
-    if (p === 'hybrid') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>';
+  function toggleSearchDetails(idx) {
+    var panel = document.getElementById('sr-details-' + idx);
+    var chevron = document.getElementById('sr-chevron-' + idx);
+    panel.classList.toggle('open');
+    chevron.classList.toggle('rotated');
+  }
+
+  function sourceBadge(source) {
+    if (source === 'greenhouse') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Greenhouse</span>';
+    if (source === 'lever') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Lever</span>';
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">' + escapeHtml(source) + '</span>';
+  }
+
+  function workModeBadge(mode) {
+    if (mode === 'remote') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>';
+    if (mode === 'hybrid') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>';
     return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Onsite</span>';
   }
 
-  function skillBadges(skills) {
-    if (!skills || !skills.length) return '';
-    return skills.map(function(s) {
-      var n = (s.name||'').replace(/_/g,' ');
-      n = n.charAt(0).toUpperCase() + n.slice(1);
-      var cls = s.tier === 'must' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-white/[0.04] text-white/50 border-white/[0.08]';
-      return '<span class="px-2 py-0.5 rounded text-xs font-medium border ' + cls + '">' + escapeHtml(n) + (s.tier==='must'?' *':'') + '</span>';
-    }).join('');
-  }
-
-  function sourceBadge(sourceType, sourceName) {
-    if (sourceType === 'ats') {
-      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">' + escapeHtml(sourceName) + '</span>';
-    }
-    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">' + escapeHtml(sourceName) + '</span>';
-  }
-
-  // Fetch extracted details for a search result
-  function fetchDetails(idx, url) {
-    var panel = document.getElementById('sr-details-' + idx);
-    var chevron = document.getElementById('sr-chevron-' + idx);
-
-    if (panel.classList.contains('open')) {
-      panel.classList.remove('open');
-      chevron.classList.remove('rotated');
-      return;
-    }
-
-    chevron.classList.add('rotated');
-
-    // Check cache
-    if (extractCache[url]) {
-      renderExtractedDetails(idx, extractCache[url]);
-      panel.classList.add('open');
-      return;
-    }
-
-    // Show loading state
-    panel.innerHTML = '<div class="flex items-center gap-2 text-white/30 text-xs py-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Extracting job details...</div>';
-    panel.classList.add('open');
-
-    fetch('/api/jobs/extract?url=' + encodeURIComponent(url))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        extractCache[url] = data;
-        renderExtractedDetails(idx, data);
-      })
-      .catch(function() {
-        panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Could not extract details. Try selecting the job directly or choose another posting.</p>';
-      });
-  }
-
-  function renderExtractedDetails(idx, data) {
-    var panel = document.getElementById('sr-details-' + idx);
-    if (data.error && !data.quality_sufficient) {
-      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + ' Please choose a different posting.</p>';
-      return;
-    }
-    if (!data.quality_sufficient) {
-      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">This page did not contain enough structured job content. Please choose a different posting.</p>';
-      return;
-    }
-
-    var h = '';
-
-    if (data.title) {
-      h += '<div class="mb-2"><span class="text-xs text-white/40">Title:</span> <span class="text-sm text-white font-medium">' + escapeHtml(data.title) + '</span></div>';
-    }
-    if (data.company && data.company !== 'Unknown') {
-      h += '<div class="mb-2"><span class="text-xs text-white/40">Company:</span> <span class="text-sm text-white">' + escapeHtml(data.company) + '</span></div>';
-    }
-    if (data.location_policy) {
-      h += '<div class="mb-3">' + locationBadge(data.location_policy) + '</div>';
-    }
-
-    if (data.required_skills && data.required_skills.length) {
-      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Skills Found</h4><div class="flex flex-wrap gap-1">' + skillBadges(data.required_skills.concat(data.nice_to_have_skills || [])) + '</div></div>';
-    }
-
-    if (data.requirements) {
-      var reqText = data.requirements.substring(0, 500);
-      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Requirements</h4><p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(reqText) + (data.requirements.length > 500 ? '...' : '') + '</p></div>';
-    }
-
-    if (data.responsibilities) {
-      var respText = data.responsibilities.substring(0, 400);
-      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Responsibilities</h4><p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(respText) + (data.responsibilities.length > 400 ? '...' : '') + '</p></div>';
-    }
-
-    var conf = data.data_confidence || 'adequate';
-    var confLabel = conf === 'strong' ? 'Rich job data extracted' : conf === 'adequate' ? 'Sufficient data for assessment' : 'Limited data extracted';
-    var confColor = conf === 'strong' ? 'text-green-400' : conf === 'adequate' ? 'text-gold-400' : 'text-red-400';
-    h += '<div class="pt-2 border-t border-white/[0.06]"><span class="text-[10px] ' + confColor + '">' + confLabel + '</span></div>';
-
-    panel.innerHTML = h;
+  function commitmentBadge(c) {
+    if (c === 'intern') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Internship</span>';
+    if (c === 'part_time') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Part-time</span>';
+    if (c === 'contract') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Contract</span>';
+    return '';
   }
 
   function renderSearchResult(job, idx) {
@@ -365,44 +296,93 @@
     h += '<div class="flex-1 min-w-0">';
     h += '<h3 class="font-bold text-white text-base mb-1">' + escapeHtml(job.title) + '</h3>';
     h += '<p class="text-gold-500 font-medium text-sm mb-1">' + escapeHtml(job.company) + '</p>';
-    if (job.snippet) {
-      h += '<p class="text-white/25 text-xs leading-relaxed mb-2 line-clamp-2">' + escapeHtml(job.snippet) + '</p>';
+
+    // Location + badges
+    h += '<div class="flex flex-wrap items-center gap-2 mt-1.5 mb-1">';
+    if (job.location) {
+      h += '<span class="text-white/30 text-xs">' + escapeHtml(job.location) + '</span>';
     }
-    // Source badge + link
+    h += workModeBadge(job.work_mode);
+    var cb = commitmentBadge(job.commitment);
+    if (cb) h += cb;
+    h += '</div>';
+
+    // Source + department
     h += '<div class="flex items-center gap-2 mt-1">';
-    h += sourceBadge(job.source_type, job.source);
-    if (job.url) {
-      h += '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-white/20 hover:text-gold-500/60 transition-colors">';
-      h += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-      h += 'View original</a>';
+    h += sourceBadge(job.source);
+    if (job.department) {
+      h += '<span class="text-[11px] text-white/20">' + escapeHtml(job.department) + '</span>';
     }
     h += '</div>';
+
+    if (job.source_url) {
+      h += '<a href="' + escapeHtml(job.source_url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-white/15 hover:text-gold-500/60 transition-colors mt-1">';
+      h += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+      h += 'View original posting</a>';
+    }
     h += '</div>';
 
     // Right: buttons
     h += '<div class="flex flex-col gap-2 flex-shrink-0">';
 
     // Details button
-    h += '<button onclick="fetchDetails(' + idx + ',\'' + escapeHtml(job.url||'').replace(/'/g,"\\'") + '\')" type="button"';
+    h += '<button onclick="toggleSearchDetails(' + idx + ')" type="button"';
     h += ' class="inline-flex items-center gap-2 text-white/40 hover:text-gold-500 font-medium py-2 px-4 rounded-md border border-white/[0.08] hover:border-gold-500/30 hover:bg-gold-500/[0.04] transition-all text-sm">';
     h += 'Details <svg id="sr-chevron-' + idx + '" class="w-4 h-4 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
     h += '</button>';
 
-    // Select button
+    // Select button — sends full job object as JSON
     h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
-    h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
-    h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
-    h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
+    h += '<input type="hidden" name="job_json" value="' + escapeHtml(JSON.stringify(job)) + '">';
     h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
     h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
     h += '<span class="btn-text">Select Job</span></button></form>';
 
     h += '</div></div>';
 
-    // Expandable details panel (populated by fetchDetails)
-    h += '<div id="sr-details-' + idx + '" class="details-panel border-t border-white/[0.06] mt-3"></div>';
+    // Expandable details panel — pre-populated with real structured content
+    h += '<div id="sr-details-' + idx + '" class="details-panel border-t border-white/[0.06] mt-3">';
+    h += renderJobDetails(job);
+    h += '</div>';
 
     h += '</div></div>';
+    return h;
+  }
+
+  function renderJobDetails(job) {
+    var h = '';
+
+    // Description preview
+    if (job.description) {
+      var desc = job.description.substring(0, 800);
+      h += '<div class="mb-3">';
+      h += '<h4 class="text-xs font-semibold text-white/50 mb-1.5">Description</h4>';
+      h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(desc) + (job.description.length > 800 ? '...' : '') + '</p>';
+      h += '</div>';
+    }
+
+    // Requirements
+    if (job.requirements) {
+      var req = job.requirements.substring(0, 600);
+      h += '<div class="mb-3">';
+      h += '<h4 class="text-xs font-semibold text-white/50 mb-1.5">Requirements</h4>';
+      h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(req) + (job.requirements.length > 600 ? '...' : '') + '</p>';
+      h += '</div>';
+    }
+
+    // Responsibilities
+    if (job.responsibilities) {
+      var resp = job.responsibilities.substring(0, 600);
+      h += '<div class="mb-3">';
+      h += '<h4 class="text-xs font-semibold text-white/50 mb-1.5">Responsibilities</h4>';
+      h += '<p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(resp) + (job.responsibilities.length > 600 ? '...' : '') + '</p>';
+      h += '</div>';
+    }
+
+    if (!job.description && !job.requirements && !job.responsibilities) {
+      h += '<p class="text-white/20 text-xs py-2">No detailed content available for this posting.</p>';
+    }
+
     return h;
   }
 </script>

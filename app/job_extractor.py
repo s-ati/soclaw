@@ -1,4 +1,11 @@
-"""Extract structured job data from a real job posting URL."""
+"""Extract structured job data from provider content or a URL.
+
+The primary path is extract_from_structured_job() which takes a normalized
+provider job dict (from Greenhouse/Lever) and extracts skills, sections,
+and context — no HTTP needed since the content is already fetched.
+
+extract_job_from_url() is kept as a fallback but is no longer the main path.
+"""
 
 import re
 from html.parser import HTMLParser
@@ -268,7 +275,46 @@ def _assess_extraction_quality(data: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Main extraction function
+# Extract from a structured provider job (Greenhouse / Lever)
+# ---------------------------------------------------------------------------
+def extract_from_structured_job(provider_job: dict) -> dict:
+    """Extract skills, sections, and quality from a provider job dict.
+
+    Takes a normalized job from job_providers.py (already has description,
+    requirements, responsibilities as plain text). Returns the same shape
+    as extract_job_from_url() so the rest of the system can use it.
+    """
+    text = provider_job.get("description", "")
+    requirements = provider_job.get("requirements", "") or _extract_section(text, "requirements")
+    responsibilities = provider_job.get("responsibilities", "") or _extract_section(text, "responsibilities")
+
+    # Extract skills from the full description text
+    all_skills = _extract_skills_from_text(text)
+    must_skills = [s for s in all_skills if s["tier"] != "nice"]
+    nice_skills = [s for s in all_skills if s["tier"] == "nice"]
+
+    context_keywords = _extract_context_keywords(text)
+
+    data = {
+        "title": provider_job.get("title", ""),
+        "company": provider_job.get("company", "Unknown"),
+        "location_policy": provider_job.get("work_mode", "onsite"),
+        "description": text[:5000],
+        "requirements": requirements[:3000],
+        "responsibilities": responsibilities[:3000],
+        "required_skills": must_skills,
+        "nice_to_have_skills": nice_skills,
+        "context_keywords": context_keywords,
+        "source_url": provider_job.get("source_url", ""),
+        "source": provider_job.get("source", ""),
+        "error": None,
+    }
+
+    return _assess_extraction_quality(data)
+
+
+# ---------------------------------------------------------------------------
+# URL-based extraction (legacy fallback)
 # ---------------------------------------------------------------------------
 async def extract_job_from_url(url: str) -> dict:
     """Fetch a job URL and extract structured job data.

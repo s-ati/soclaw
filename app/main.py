@@ -20,7 +20,7 @@ from .pdf_report import generate_pdf
 from .ai_client import AIClient
 from .evidence import evaluate_evidence
 from .job_search import search_jobs
-from .job_extractor import extract_job_from_url
+from .job_extractor import extract_from_structured_job
 from .seed import seed
 from .retention import purge_expired
 
@@ -273,34 +273,43 @@ def jobs_page(request: Request, user: User = Depends(get_current_user), db: Sess
 
 @app.get("/api/jobs/search")
 async def api_jobs_search(q: str = Query(""), user: User = Depends(get_current_user)):
+    """Search Greenhouse + Lever for matching structured jobs."""
     result = await search_jobs(q)
-    return JSONResponse(content=result)
-
-@app.get("/api/jobs/extract")
-async def api_jobs_extract(url: str = Query(""), user: User = Depends(get_current_user)):
-    """Fetch and extract structured job data from a real job posting URL."""
-    result = await extract_job_from_url(url)
     return JSONResponse(content=result)
 
 @app.post("/jobs/from-search", response_class=HTMLResponse)
 async def create_job_from_search(
     request: Request,
-    url: str = Form(""),
-    title: str = Form(""),
-    company: str = Form(""),
+    job_json: str = Form(""),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Extract real job content from URL, create a Job record, and assess."""
-    # Extract real job content from source URL
-    extracted = None
-    if url:
-        extracted = await extract_job_from_url(url)
+    """Receive a structured provider job, extract skills, create Job, and assess."""
+    import json
+
+    # Parse the provider job object sent from the frontend
+    provider_job = None
+    try:
+        if job_json:
+            provider_job = json.loads(job_json)
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    if not provider_job or not provider_job.get("title"):
+        jobs = db.query(Job).filter(Job.active == True).all()
+        return templates.TemplateResponse("jobs.html", {
+            "request": request, "jobs": jobs,
+            "error": "Invalid job data. Please try selecting a different job.",
+            "search_enabled": True,
+        })
+
+    # Extract skills and sections from the structured job description
+    extracted = extract_from_structured_job(provider_job)
 
     if extracted and extracted.get("quality_sufficient"):
         job = Job(
-            title=(extracted.get("title") or title)[:200],
-            company=(extracted.get("company") or company)[:200],
+            title=(extracted.get("title") or provider_job.get("title", ""))[:200],
+            company=(extracted.get("company") or provider_job.get("company", ""))[:200],
             location_policy=extracted.get("location_policy", "onsite"),
             required_skills=extracted.get("required_skills", []),
             nice_to_have_skills=extracted.get("nice_to_have_skills", []),
@@ -309,18 +318,16 @@ async def create_job_from_search(
             active=True,
         )
     else:
-        # Quality guardrail: not enough info for a reliable report
+        # Even structured jobs can have thin descriptions — handle gracefully
         jobs = db.query(Job).filter(Job.active == True).all()
         reason = ""
-        if extracted and extracted.get("error"):
-            reason = extracted["error"]
-        elif extracted and extracted.get("quality_reasons"):
+        if extracted and extracted.get("quality_reasons"):
             reason = ", ".join(extracted["quality_reasons"])
         else:
             reason = "insufficient job content"
         return templates.TemplateResponse("jobs.html", {
             "request": request, "jobs": jobs,
-            "error": f"This posting could not be analyzed ({reason}). Please choose a different job from the search results.",
+            "error": f"This posting has too little content for a reliable assessment ({reason}). Please choose a different job.",
             "search_enabled": True,
         })
 
