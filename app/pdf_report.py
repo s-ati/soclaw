@@ -606,34 +606,12 @@ class _Renderer:
             S_EVIDENCE)
         self._gap(3)
 
-        # Confidence indicator (if evidence pipeline ran)
-        conf = ev.get("confidence")
-        source_count = ev.get("source_count", 0)
-        sections = ev.get("sections_covered", [])
-        if conf and source_count > 0:
-            section_str = ", ".join(s.title() for s in sections)
-            meta = (f"{source_count} evidence items from "
-                    f"{section_str or 'profile'} "
-                    f"\u2014 confidence: {conf}")
-            self._para(
-                f"<b>Evidence Basis:</b>&nbsp;&nbsp;{_esc(meta)}",
-                S_EVIDENCE)
-            self._gap(3)
-
         # Work-Style Source
         self._para(
             "<b>Work-Style Source:</b>&nbsp;&nbsp;"
             "8-question behavioral questionnaire (Likert 1\u20135 scale)",
             S_EVIDENCE)
         self._gap(3)
-
-        # Caution note (if present)
-        caution = ev.get("caution_note")
-        if caution:
-            self._gap(2)
-            self._para(
-                f"<i>Note: {_esc(caution)}</i>",
-                S_BODY_XS)
 
         self._gap(6)
         # Privacy note

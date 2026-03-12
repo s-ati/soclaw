@@ -392,16 +392,15 @@ def summarize_deterministic(
     """
     Build curated evidence summary from ranked items.
 
-    Returns dict with:
-        summary_lines, source_count, matched_skills, confidence,
-        caution_note, sections_covered, supporting_ids, top_items
+    Produces 1–2 concise, recruiter-friendly sentences for the visible
+    PDF report. Internal metadata (counts, IDs, confidence) is kept in
+    the returned dict but never surfaces in the summary text.
     """
     if not selected:
         return {
             "summary_lines": [
-                "No concrete applied evidence detected across available "
-                "profile sections. Recommend focused probing on practical "
-                "execution during the interview process."
+                "No strong applied evidence identified from the available "
+                "profile. Practical capability should be explored in interview."
             ],
             "source_count": 0,
             "matched_skills": [],
@@ -423,56 +422,67 @@ def summarize_deterministic(
         s in ("projects", "education", "research", "competitions")
         for s in sections)
 
-    lines: list[str] = []
+    # ── Build 1–2 readable sentences ──────────────────────────
 
-    # Line 1: source characterization
+    # Human-readable skill names (e.g. financial_modeling → financial modeling)
+    display_skills = [s.replace("_", " ") for s in all_skills]
+
+    # Skill phrase
+    if display_skills:
+        if len(display_skills) == 1:
+            skill_phrase = display_skills[0]
+        elif len(display_skills) == 2:
+            skill_phrase = f"{display_skills[0]} and {display_skills[1]}"
+        else:
+            skill_phrase = ", ".join(display_skills[:3])
+    else:
+        skill_phrase = ""
+
+    # Context phrase
     if has_prof and has_acad:
-        lines.append(
-            f"Applied evidence spans professional and academic contexts, "
-            f"with {n} concrete execution signals identified across "
-            f"{len(sections)} source categories")
+        ctx = "across professional and academic work"
     elif has_prof:
-        lines.append(
-            f"Evidence of applied execution drawn primarily from "
-            f"professional experience, indicating practical capability "
-            f"in workplace settings ({n} signals identified)")
+        ctx = "in professional settings"
     elif has_acad:
-        lines.append(
-            f"Applied evidence concentrated in academic and project "
-            f"contexts ({n} signals), suggesting structured analytical "
-            f"capability with limited professional validation")
+        ctx = "in academic and project-based work"
     else:
-        lines.append(
-            f"Evidence drawn from {', '.join(sections)} contexts "
-            f"({n} items), indicating early-stage applied exposure")
+        ctx = "across available profile experience"
 
-    # Line 2: skill alignment
-    if all_skills:
-        skill_str = ", ".join(all_skills[:4])
-        remaining = len(all_skills) - 4
-        suffix = f" and {remaining} more" if remaining > 0 else ""
-        lines.append(
-            f"Strongest skill-relevant signals in {skill_str}{suffix}, "
-            f"supported by traceable source evidence")
-    elif n > 0:
-        lines.append(
-            "Execution signals present but limited direct alignment "
-            "with target role skill requirements detected")
+    # Sentence 1: what the evidence supports
+    if skill_phrase and conf in ("strong", "moderate"):
+        sent1 = (
+            f"Strongest evidence supports {skill_phrase} capability "
+            f"{ctx}."
+        )
+    elif skill_phrase:
+        sent1 = (
+            f"The clearest signals point to {skill_phrase}, "
+            f"primarily {ctx}."
+        )
+    elif conf in ("strong", "moderate"):
+        sent1 = (
+            f"Relevant applied work is visible {ctx}, though "
+            f"specific skill alignment is limited."
+        )
+    else:
+        sent1 = (
+            f"Applied evidence is limited {ctx}."
+        )
 
-    # Line 3: confidence/caution
+    # Sentence 2: validation note (only when needed)
     if conf == "strong":
-        lines.append(
-            "Evidence quality supports targeted interview validation "
-            "of applied depth and ownership patterns")
+        sent2 = "Execution depth should be confirmed through targeted questions."
     elif conf == "moderate":
-        lines.append(
-            "Evidence suggests exposure and structured thinking; "
-            "execution depth should be validated through direct "
-            "questioning")
+        sent2 = "Practical depth should be validated in interview."
     else:
-        lines.append(
-            "Available applied evidence is limited; recommend focused "
-            "probing on practical execution during the interview process")
+        sent2 = (
+            "Hands-on capability should be explored through focused "
+            "interview questioning."
+        )
+
+    lines = [f"{sent1} {sent2}"]
+
+    # ── Internal metadata (not shown in PDF copy) ─────────────
 
     caution = None
     if conf == "limited":
@@ -507,20 +517,31 @@ def summarize_deterministic(
 # ── Optional Groq-assisted summarization ──────────────────────
 
 EVIDENCE_SYSTEM_PROMPT = """\
-You are a senior hiring assessment analyst. Given evidence items extracted \
-from a candidate's profile, produce 2-3 concise executive-quality summary \
-sentences for a premium hiring assessment report.
+You write the "Applied Evidence" line for a premium hiring assessment report.
+
+Given a candidate's evidence items and the target role, produce exactly \
+1-2 short sentences that a recruiter can scan in seconds.
+
+Format: state the strongest skill areas, where the evidence comes from \
+(professional, academic, project work), and a brief validation note.
 
 Rules:
-- Summarize what the evidence collectively shows about applied execution
-- Be specific about skill areas demonstrated
-- Note limitations honestly but professionally
-- Use calm, analytical, executive language
-- Do NOT invent evidence not present in the items
-- Do NOT use buzzwords, filler, or exaggeration
+- Maximum 2 sentences total
+- Name concrete skill areas (e.g. "analysis and financial modeling")
+- Use broad source context (e.g. "across professional and academic work")
+- End with a short validation note if relevant (e.g. "Practical depth \
+should be validated in interview.")
+- Calm, direct, executive tone
+- Do NOT mention signal counts, source categories, traceability, or \
+pipeline mechanics
+- Do NOT invent skills or evidence not in the items
 - Do NOT use first person
-- Return ONLY a JSON array of 2-3 strings, no markdown
-Example: ["Summary sentence 1.", "Summary sentence 2."]
+- Return ONLY a JSON array of 1-2 strings, no markdown
+
+Good example:
+["Strongest evidence supports analysis and financial modeling capability \
+across professional and academic work. Practical depth should be validated \
+in interview."]
 """
 
 
