@@ -243,7 +243,7 @@ def _assess_extraction_quality(data: dict) -> dict:
         score += 10
 
     data["extraction_quality"] = score
-    data["quality_sufficient"] = score >= 40
+    data["quality_sufficient"] = score >= 45
     if not data["quality_sufficient"]:
         data["quality_reasons"] = reasons
 

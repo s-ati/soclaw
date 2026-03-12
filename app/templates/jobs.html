@@ -35,7 +35,7 @@
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
     Available Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">Search for real jobs, preview the extracted details, then select one to generate your assessment.</p>
+  <p class="text-white/40 mt-1 font-light">Search for jobs, then select a result to generate your assessment in one click.</p>
 </div>
 
 {% if error %}
@@ -84,6 +84,7 @@
       <h3 class="text-sm font-semibold text-white/60">Search Results</h3>
       <button onclick="clearSearch()" class="text-xs text-white/30 hover:text-white/60 transition-colors">Clear</button>
     </div>
+    <p class="text-[11px] text-white/25 mb-3">Results are ranked by extractability. Green-badged results work best for one-click assessment.</p>
     <div id="search-results-list" class="space-y-3"></div>
   </div>
 </div>
@@ -270,11 +271,22 @@
     }).join('');
   }
 
-  function qualityIndicator(score, isAgg) {
+  function extractabilityBadge(ext) {
+    if (ext === 'high') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">High extractability</span>';
+    if (ext === 'medium') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Medium extractability</span>';
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">Low extractability</span>';
+  }
+
+  function qualityIndicator(score, isAgg, ext) {
     var color = score >= 70 ? '#0D9488' : score >= 40 ? '#D4A843' : '#EF4444';
     var label = score >= 70 ? 'Likely a real posting' : score >= 40 ? 'May be a listing page' : 'Probably not a job posting';
     if (isAgg) { label = 'Listing/category page'; color = '#EF4444'; }
-    return '<div class="mt-2"><div class="quality-bar" style="width:80px"><div class="quality-fill" style="width:' + Math.max(10,score) + '%;background:' + color + '"></div></div><span class="text-[10px] text-white/20 ml-1">' + escapeHtml(label) + '</span></div>';
+    var h = '<div class="mt-2 flex items-center gap-2">';
+    h += extractabilityBadge(ext || 'low');
+    h += '<div class="quality-bar" style="width:60px"><div class="quality-fill" style="width:' + Math.max(10,score) + '%;background:' + color + '"></div></div>';
+    h += '<span class="text-[10px] text-white/20">' + escapeHtml(label) + '</span>';
+    h += '</div>';
+    return h;
   }
 
   // Fetch extracted details for a search result
@@ -315,7 +327,11 @@
   function renderExtractedDetails(idx, data) {
     var panel = document.getElementById('sr-details-' + idx);
     if (data.error && !data.quality_sufficient) {
-      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + '</p>';
+      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + ' Try choosing a different posting with higher extractability.</p>';
+      return;
+    }
+    if (!data.quality_sufficient) {
+      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Not enough structured content found on this page. Please choose a different posting \u2014 results from Greenhouse, Lever, or Ashby work best.</p>';
       return;
     }
 
@@ -370,8 +386,10 @@
       h += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
       h += escapeHtml(job.source || 'View original') + '</a>';
     }
-    h += qualityIndicator(job.quality_score || 50, job.is_aggregator);
+    h += qualityIndicator(job.quality_score || 50, job.is_aggregator, job.extractability);
     h += '</div>';
+
+    var isLow = (job.extractability === 'low');
 
     // Right: buttons
     h += '<div class="flex flex-col gap-2 flex-shrink-0">';
@@ -383,13 +401,19 @@
     h += '</button>';
 
     // Select button (form posts URL for backend extraction)
-    h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
-    h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
-    h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
-    h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
-    h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
-    h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-    h += '<span class="btn-text">Select Job</span></button></form>';
+    if (isLow) {
+      h += '<button disabled class="inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center opacity-40 cursor-not-allowed border border-white/[0.06] text-white/30">';
+      h += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+      h += '<span>Not extractable</span></button>';
+    } else {
+      h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
+      h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
+      h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
+      h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
+      h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
+      h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      h += '<span class="btn-text">Select Job</span></button></form>';
+    }
 
     h += '</div></div>';
 
