@@ -1,13 +1,16 @@
-"""Google Custom Search API client for live job search."""
+"""Job search using DuckDuckGo (free, no API key) with Google CSE fallback."""
+
+import re
+from urllib.parse import urlparse
 
 import httpx
-import re
-from urllib.parse import urlencode
 from .settings import settings
 
 GOOGLE_SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
 
-# Default skill mappings for search-result jobs
+# ---------------------------------------------------------------------------
+# Skill / context extraction helpers
+# ---------------------------------------------------------------------------
 SKILL_KEYWORD_MAP = {
     "excel": ["excel", "spreadsheet", "vba"],
     "powerpoint": ["powerpoint", "presentation", "slides"],
@@ -37,27 +40,24 @@ def _detect_location_policy(text: str) -> str:
     return "onsite"
 
 
-def _extract_company(title: str, snippet: str, display_link: str) -> str:
+def _extract_company(title: str, snippet: str, source: str) -> str:
     """Try to extract a company name from the search result."""
-    # Common job board patterns: "Title at Company" or "Title - Company"
+    boards = ["indeed", "linkedin", "glassdoor", "ziprecruiter",
+              "monster", "dice", "angel", "wellfound", "google",
+              "duckduckgo", "bing"]
     for sep in [" at ", " - ", " | ", " — ", " – "]:
         if sep in title:
             parts = title.split(sep)
             if len(parts) >= 2:
                 candidate = parts[-1].strip()
-                # Filter out job board names
-                boards = ["indeed", "linkedin", "glassdoor", "ziprecruiter",
-                          "monster", "dice", "angel", "wellfound", "google"]
                 if not any(b in candidate.lower() for b in boards):
                     return candidate[:100]
-
-    # Fallback: use the display link domain
-    domain = display_link.replace("www.", "").split(".")[0]
+    # Fallback: domain name
+    domain = source.replace("www.", "").split(".")[0] if source else "Unknown"
     return domain.title()
 
 
 def _extract_skills(text: str) -> list[dict]:
-    """Extract skills from job description text."""
     t = text.lower()
     skills = []
     for canonical, variants in SKILL_KEYWORD_MAP.items():
@@ -72,83 +72,98 @@ def _extract_context_keywords(text: str) -> list[str]:
 
 
 def _clean_title(title: str) -> str:
-    """Remove job board suffixes and clean up the title."""
-    # Remove common suffixes like "| Indeed.com", "- LinkedIn", etc.
-    for pattern in [r"\s*[\|–—-]\s*(Indeed|LinkedIn|Glassdoor|ZipRecruiter|Monster|Dice|Google).*$",
+    for pattern in [r"\s*[\|–—-]\s*(Indeed|LinkedIn|Glassdoor|ZipRecruiter|Monster|Dice|Google|DuckDuckGo).*$",
                     r"\s*-\s*job posting.*$"]:
         title = re.sub(pattern, "", title, flags=re.IGNORECASE)
     return title.strip()[:200]
 
 
-def normalize_result(item: dict) -> dict:
-    """Normalize a Google Custom Search result into our job card format."""
-    raw_title = item.get("title", "Unknown Position")
-    snippet = item.get("snippet", "")
-    link = item.get("link", "")
-    display_link = item.get("displayLink", "")
-
-    title = _clean_title(raw_title)
-    company = _extract_company(raw_title, snippet, display_link)
-    combined_text = f"{title} {snippet}"
-
-    location_policy = _detect_location_policy(combined_text)
-    required_skills = _extract_skills(combined_text)
-    context_keywords = _extract_context_keywords(combined_text)
-
+# ---------------------------------------------------------------------------
+# Normalize a search result (works for both DDG and Google)
+# ---------------------------------------------------------------------------
+def _normalize(title: str, snippet: str, url: str, source: str) -> dict:
+    title = _clean_title(title)
+    combined = f"{title} {snippet}"
     return {
         "title": title,
-        "company": company,
-        "location_policy": location_policy,
-        "required_skills": required_skills,
+        "company": _extract_company(title, snippet, source),
+        "location_policy": _detect_location_policy(combined),
+        "required_skills": _extract_skills(combined),
         "nice_to_have_skills": [],
-        "context_keywords": context_keywords,
+        "context_keywords": _extract_context_keywords(combined),
         "snippet": snippet.strip(),
-        "url": link,
-        "source": display_link,
+        "url": url,
+        "source": source,
     }
 
 
-async def search_jobs(query: str, num: int = 10) -> dict:
-    """Search for jobs using Google Custom Search API.
+# ---------------------------------------------------------------------------
+# DuckDuckGo search (free, no API key)
+# ---------------------------------------------------------------------------
+async def _search_ddg(query: str, num: int = 10) -> dict:
+    """Search using duckduckgo-search library (runs sync in thread)."""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
 
-    Returns {"results": [...], "error": None} on success,
-    or {"results": [], "error": "message"} on failure.
-    """
-    if not settings.google_search_api_key or not settings.google_cse_id:
-        return {"results": [], "error": "Google Search API not configured."}
+    def _do_search():
+        from duckduckgo_search import DDGS
+        results = DDGS().text(f"{query} job", max_results=num)
+        return results
 
-    if not query or not query.strip():
-        return {"results": [], "error": "Search query is required."}
+    try:
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            raw = await loop.run_in_executor(pool, _do_search)
 
-    # Append "job" to query to bias towards job listings
-    search_query = f"{query.strip()} job"
+        if not raw:
+            return {"results": [], "error": "No results found. Try a different search term."}
 
+        results = []
+        for item in raw:
+            url = item.get("href", "")
+            source = urlparse(url).netloc if url else ""
+            results.append(_normalize(
+                title=item.get("title", "Unknown Position"),
+                snippet=item.get("body", ""),
+                url=url,
+                source=source,
+            ))
+        return {"results": results, "error": None}
+
+    except Exception as e:
+        err = str(e)
+        if "ConnectError" in err or "ConnectionError" in err:
+            return {"results": [], "error": "Could not connect to search service. Check network."}
+        if "RatelimitE" in err:
+            return {"results": [], "error": "Search rate limit reached. Please wait a moment and try again."}
+        return {"results": [], "error": f"Search failed: {err}"}
+
+
+# ---------------------------------------------------------------------------
+# Google Custom Search (optional fallback)
+# ---------------------------------------------------------------------------
+async def _search_google(query: str, num: int = 10) -> dict:
     params = {
         "key": settings.google_search_api_key,
         "cx": settings.google_cse_id,
-        "q": search_query,
+        "q": f"{query} job",
         "num": min(num, 10),
     }
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(GOOGLE_SEARCH_URL, params=params)
 
-        # Try to parse as JSON first (Google API errors are JSON)
         error_detail = None
         try:
             data = resp.json()
         except Exception:
             data = None
-            # HTML error page — likely a network/proxy block, not a Google API error
             if resp.status_code == 403:
-                error_detail = ("Network blocked access to Google APIs. "
-                                "This may be a firewall or proxy restriction.")
+                error_detail = "Network blocked access to Google APIs."
 
         if resp.status_code != 200:
             if error_detail:
                 return {"results": [], "error": error_detail}
-            # Structured Google API error
             if data and "error" in data:
                 msg = data["error"].get("message", "Unknown error")
                 code = data["error"].get("code", resp.status_code)
@@ -159,12 +174,40 @@ async def search_jobs(query: str, num: int = 10) -> dict:
             return {"results": [], "error": "Invalid response from Google API."}
 
         items = data.get("items", [])
-        results = [normalize_result(item) for item in items]
+        results = []
+        for item in items:
+            results.append(_normalize(
+                title=item.get("title", "Unknown Position"),
+                snippet=item.get("snippet", ""),
+                url=item.get("link", ""),
+                source=item.get("displayLink", ""),
+            ))
         return {"results": results, "error": None}
 
     except httpx.TimeoutException:
-        return {"results": [], "error": "Search request timed out. Please try again."}
+        return {"results": [], "error": "Search request timed out."}
     except httpx.ConnectError:
-        return {"results": [], "error": "Could not connect to Google APIs. Check your network connection."}
+        return {"results": [], "error": "Could not connect to Google APIs."}
     except Exception as e:
-        return {"results": [], "error": f"Search failed: {str(e)}"}
+        return {"results": [], "error": f"Google search failed: {str(e)}"}
+
+
+# ---------------------------------------------------------------------------
+# Main entry point: tries DDG first, falls back to Google if configured
+# ---------------------------------------------------------------------------
+async def search_jobs(query: str, num: int = 10) -> dict:
+    """Search for jobs. Uses DuckDuckGo (free) first, Google CSE as fallback."""
+    if not query or not query.strip():
+        return {"results": [], "error": "Search query is required."}
+
+    # Try DuckDuckGo first (free, no key needed)
+    result = await _search_ddg(query.strip(), num)
+
+    # If DDG failed and Google is configured, try Google
+    if result.get("error") and settings.google_search_api_key and settings.google_cse_id:
+        google_result = await _search_google(query.strip(), num)
+        if not google_result.get("error"):
+            return google_result
+        # Both failed — return DDG error (more likely a network issue)
+
+    return result
