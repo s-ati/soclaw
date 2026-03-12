@@ -89,54 +89,31 @@
         class="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all text-sm resize-none"></textarea>
     </div>
 
-    <!-- Submit Button -->
+    <!-- Submit Button — opens original job posting -->
     <div class="apply-delay">
-      <button onclick="submitApplication()" id="submit-btn"
+      {% if job and job.source_url %}
+      <a href="{{ job.source_url }}" target="_blank" rel="noopener noreferrer" id="submit-btn"
         class="w-full btn-gold py-4 rounded-md text-sm flex items-center justify-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-        Submit Application
-      </button>
-    </div>
-
-    <!-- Success Message (hidden initially) -->
-    <div id="success-msg" class="hidden">
-      <div class="card-premium rounded-lg p-8 text-center border-gold-500/20">
-        <div class="w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-4 border border-gold-500/30" style="background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));">
-          <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-white mb-2">Application Submitted!</h3>
-        <p class="text-white/40 text-sm mb-6 font-light">Your application for <span class="font-semibold text-white">{{ job.title if job else 'this position' }}</span> has been submitted with your SOCLAW report attached.</p>
-        <a href="/dashboard" class="btn-gold inline-flex items-center gap-2 py-3 px-6 rounded-md text-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          Back to Dashboard
-        </a>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        Apply on Company Website
+      </a>
+      {% else %}
+      <div class="w-full py-4 rounded-md text-sm flex items-center justify-center gap-2 text-white/30 border border-white/[0.06]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        No direct application link available — apply via the company's careers page.
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
 
 <!-- Navigation -->
 <div class="mt-8" id="back-link">
-  <a href="/assessments/{{ assessment.id }}/pdf" class="inline-flex items-center gap-2 text-gold-500 hover:text-gold-400 font-medium text-sm transition-colors">
+  <a href="/jobs" class="inline-flex items-center gap-2 text-gold-500 hover:text-gold-400 font-medium text-sm transition-colors">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-    Back to Report
+    Back to Jobs
   </a>
 </div>
 
-<script>
-  function submitApplication() {
-    var btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Submitting...';
-    btn.classList.add('opacity-75', 'cursor-not-allowed');
-
-    // Simulate submission
-    setTimeout(function() {
-      btn.classList.add('hidden');
-      document.getElementById('success-msg').classList.remove('hidden');
-      document.getElementById('back-link').classList.add('hidden');
-    }, 1500);
-  }
-</script>
 
 {% endblock %}

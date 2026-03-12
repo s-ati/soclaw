@@ -114,7 +114,20 @@ def login_post(
     if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid email or password."})
     token = create_jwt(str(user.id))
-    resp = RedirectResponse("/dashboard", status_code=303)
+
+    # Determine where to send the user based on onboarding state
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).order_by(CandidateProfile.created_at.desc()).first()
+    profile_ready = bool(profile and profile.extraction)
+    questionnaire_ready = bool(profile and profile.questionnaire and len(profile.questionnaire.keys()) == 8)
+
+    if not profile_ready:
+        redirect_to = "/profile/upload"
+    elif not questionnaire_ready:
+        redirect_to = "/profile/questionnaire"
+    else:
+        redirect_to = "/dashboard"
+
+    resp = RedirectResponse(redirect_to, status_code=303)
     resp.set_cookie("sm_token", token, httponly=True, samesite="lax")
     return resp
 
@@ -129,6 +142,12 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).order_by(CandidateProfile.created_at.desc()).first()
     profile_ready = bool(profile and profile.extraction)
     questionnaire_ready = bool(profile and profile.questionnaire and len(profile.questionnaire.keys()) == 8)
+
+    # Enforce onboarding: must complete profile + questionnaire before dashboard
+    if not profile_ready:
+        return RedirectResponse("/profile/upload", status_code=303)
+    if not questionnaire_ready:
+        return RedirectResponse("/profile/questionnaire", status_code=303)
 
     assessments = db.query(Assessment).filter(Assessment.user_id == user.id).order_by(Assessment.created_at.desc()).limit(10).all()
     has_assessment = len(assessments) > 0
@@ -526,6 +545,7 @@ async def create_job_from_search(
             nice_to_have_skills=extracted.get("nice_to_have_skills", []),
             context_keywords=extracted.get("context_keywords", []),
             weights=DEFAULT_WEIGHTS_CORP_INTERN,
+            source_url=(provider_job.get("source_url") or extracted.get("source_url") or "")[:1024] or None,
             active=True,
         )
     else:
