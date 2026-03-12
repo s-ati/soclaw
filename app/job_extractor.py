@@ -1,5 +1,6 @@
 """Extract structured job data from a real job posting URL."""
 
+import json
 import re
 from html.parser import HTMLParser
 
@@ -107,6 +108,96 @@ def html_to_text(html: str) -> str:
     parser = _TextExtractor()
     parser.feed(html)
     return parser.get_text()
+
+
+def _extract_json_ld(html: str) -> dict | None:
+    """Extract JobPosting structured data from JSON-LD if present.
+
+    Many ATS platforms (Greenhouse, Lever, Ashby, Workable) embed
+    schema.org/JobPosting JSON-LD, which is far more reliable than
+    parsing raw HTML text.
+    """
+    try:
+        # Find all JSON-LD blocks
+        for m in re.finditer(
+            r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+            html, re.DOTALL | re.IGNORECASE,
+        ):
+            raw = m.group(1).strip()
+            data = json.loads(raw)
+            # Handle both single object and array
+            items = data if isinstance(data, list) else [data]
+            for item in items:
+                if isinstance(item, dict) and item.get("@type") == "JobPosting":
+                    return item
+                # Some sites nest in @graph
+                if isinstance(item, dict) and "@graph" in item:
+                    for g in item["@graph"]:
+                        if isinstance(g, dict) and g.get("@type") == "JobPosting":
+                            return g
+    except (json.JSONDecodeError, TypeError, KeyError):
+        pass
+    return None
+
+
+def _parse_json_ld_job(ld: dict, domain: str) -> dict:
+    """Convert a JSON-LD JobPosting into our internal format."""
+    title = ld.get("title", "")
+    company = ""
+    org = ld.get("hiringOrganization")
+    if isinstance(org, dict):
+        company = org.get("name", "")
+    elif isinstance(org, str):
+        company = org
+    if not company:
+        company = domain.replace("www.", "").split(".")[0].title()
+
+    # Description: prefer plain text, fall back to stripping HTML
+    desc = ld.get("description", "")
+    if "<" in desc:
+        desc = html_to_text(desc)
+
+    # Location
+    location_text = ""
+    loc = ld.get("jobLocation")
+    if isinstance(loc, dict):
+        addr = loc.get("address", {})
+        if isinstance(addr, dict):
+            location_text = addr.get("addressLocality", "")
+    elif isinstance(loc, list) and loc:
+        first = loc[0]
+        if isinstance(first, dict):
+            addr = first.get("address", {})
+            if isinstance(addr, dict):
+                location_text = addr.get("addressLocality", "")
+
+    # Remote check
+    remote_flag = ld.get("jobLocationType", "")
+    full_text = f"{desc} {location_text} {remote_flag}"
+
+    location_policy = _detect_location(full_text)
+
+    # Extract structured data
+    requirements = _extract_section(desc, "requirements")[:3000]
+    responsibilities = _extract_section(desc, "responsibilities")[:3000]
+    nice_to_have = _extract_section(desc, "nice_to_have")[:2000]
+    required_skills = _extract_skills_from_text(desc)
+    nice_skills = [s for s in required_skills if s["tier"] == "nice"]
+    must_skills = [s for s in required_skills if s["tier"] != "nice"]
+    context_keywords = _extract_context_keywords(desc)
+
+    return {
+        "title": title[:200],
+        "company": company[:200],
+        "location_policy": location_policy,
+        "description": desc[:5000],
+        "requirements": requirements,
+        "responsibilities": responsibilities,
+        "required_skills": must_skills,
+        "nice_to_have_skills": nice_skills,
+        "context_keywords": context_keywords,
+        "error": None,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -261,42 +352,55 @@ async def extract_job_from_url(url: str) -> dict:
     if not url or not url.startswith("http"):
         return {"error": "Invalid URL.", "quality_sufficient": False}
 
+    from urllib.parse import urlparse
+    domain = urlparse(url).netloc
+
     try:
         async with httpx.AsyncClient(
             timeout=15.0,
             follow_redirects=True,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; SOCLAWBot/1.0)",
-                "Accept": "text/html,application/xhtml+xml",
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/122.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
             },
         ) as client:
             resp = await client.get(url)
 
         if resp.status_code != 200:
             return {
-                "error": f"Could not fetch page (HTTP {resp.status_code}).",
+                "error": f"Could not fetch page (HTTP {resp.status_code}). Try a different posting.",
                 "quality_sufficient": False,
             }
 
         content_type = resp.headers.get("content-type", "")
         if "text/html" not in content_type and "application/xhtml" not in content_type:
             return {
-                "error": "Page is not HTML. Cannot extract job details.",
+                "error": "Page is not HTML. Choose a different job posting.",
                 "quality_sufficient": False,
             }
 
         html = resp.text
         if len(html) > 500_000:
-            html = html[:500_000]  # safety limit
+            html = html[:500_000]
 
+        # --- Try JSON-LD first (most reliable for ATS pages) ---
+        json_ld = _extract_json_ld(html)
+        if json_ld:
+            data = _parse_json_ld_job(json_ld, domain)
+            data["source_url"] = url
+            data["source"] = domain
+            return _assess_extraction_quality(data)
+
+        # --- Fall back to HTML text extraction ---
         text = html_to_text(html)
 
-        # Truncate very long pages
         if len(text) > 15_000:
             text = text[:15_000]
-
-        from urllib.parse import urlparse
-        domain = urlparse(url).netloc
 
         title = _extract_title(text)
         company = _extract_company(text, domain)
@@ -330,8 +434,8 @@ async def extract_job_from_url(url: str) -> dict:
         return _assess_extraction_quality(data)
 
     except httpx.TimeoutException:
-        return {"error": "Page took too long to load.", "quality_sufficient": False}
+        return {"error": "Page took too long to load. Choose a different posting.", "quality_sufficient": False}
     except httpx.ConnectError:
-        return {"error": "Could not connect to the page.", "quality_sufficient": False}
+        return {"error": "Could not connect to the page. Choose a different posting.", "quality_sufficient": False}
     except Exception as e:
         return {"error": f"Extraction failed: {str(e)}", "quality_sufficient": False}
