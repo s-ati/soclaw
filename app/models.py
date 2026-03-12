@@ -8,6 +8,10 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+# Valid application statuses for the pipeline
+APPLICATION_STATUSES = ("saved", "applied", "interview", "offer", "rejected")
+
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -91,3 +95,37 @@ class Assessment(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class Application(Base):
+    """Tracks per-user application status through the pipeline."""
+    __tablename__ = "applications"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    assessment_id: Mapped[int | None] = mapped_column(ForeignKey("assessments.id"), nullable=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id"), nullable=False)
+
+    # saved | applied | interview | offer | rejected
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="saved")
+
+    job_title: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    company: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    match_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ActivityLog(Base):
+    """Simple activity feed per user."""
+    __tablename__ = "activity_logs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+
+    # e.g. "report_created", "status_changed", "profile_uploaded"
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    detail: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
