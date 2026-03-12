@@ -20,6 +20,7 @@ from .pdf_report import generate_pdf
 from .ai_client import AIClient
 from .evidence import evaluate_evidence
 from .job_search import search_jobs
+from .job_extractor import extract_job_from_url
 from .seed import seed
 from .retention import purge_expired
 
@@ -265,10 +266,9 @@ def questionnaire_post(
 @app.get("/jobs", response_class=HTMLResponse)
 def jobs_page(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     jobs = db.query(Job).filter(Job.active == True).order_by(Job.created_at.desc()).all()
-    search_enabled = bool(settings.google_search_api_key and settings.google_cse_id)
     return templates.TemplateResponse("jobs.html", {
         "request": request, "jobs": jobs, "error": None,
-        "search_enabled": search_enabled,
+        "search_enabled": True,
     })
 
 @app.get("/api/jobs/search")
@@ -276,45 +276,56 @@ async def api_jobs_search(q: str = Query(""), user: User = Depends(get_current_u
     result = await search_jobs(q)
     return JSONResponse(content=result)
 
+@app.get("/api/jobs/extract")
+async def api_jobs_extract(url: str = Query(""), user: User = Depends(get_current_user)):
+    """Fetch and extract structured job data from a real job posting URL."""
+    result = await extract_job_from_url(url)
+    return JSONResponse(content=result)
+
 @app.post("/jobs/from-search", response_class=HTMLResponse)
-def create_job_from_search(
+async def create_job_from_search(
     request: Request,
-    title: str = Form(...),
-    company: str = Form(...),
-    location_policy: str = Form("onsite"),
-    required_skills: str = Form("[]"),
-    nice_to_have_skills: str = Form("[]"),
-    context_keywords: str = Form("[]"),
     url: str = Form(""),
+    title: str = Form(""),
+    company: str = Form(""),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a Job record from a search result and redirect to assessment."""
+    """Extract real job content from URL, create a Job record, and assess."""
     import json
 
-    try:
-        req_skills = json.loads(required_skills)
-    except (json.JSONDecodeError, TypeError):
-        req_skills = []
-    try:
-        nth_skills = json.loads(nice_to_have_skills)
-    except (json.JSONDecodeError, TypeError):
-        nth_skills = []
-    try:
-        ctx_kw = json.loads(context_keywords)
-    except (json.JSONDecodeError, TypeError):
-        ctx_kw = []
+    # Extract real job content from source URL
+    extracted = None
+    if url:
+        extracted = await extract_job_from_url(url)
 
-    job = Job(
-        title=title[:200],
-        company=company[:200],
-        location_policy=location_policy if location_policy in ("remote", "hybrid", "onsite") else "onsite",
-        required_skills=req_skills,
-        nice_to_have_skills=nth_skills,
-        context_keywords=ctx_kw,
-        weights=DEFAULT_WEIGHTS_CORP_INTERN,
-        active=True,
-    )
+    if extracted and extracted.get("quality_sufficient"):
+        job = Job(
+            title=(extracted.get("title") or title)[:200],
+            company=(extracted.get("company") or company)[:200],
+            location_policy=extracted.get("location_policy", "onsite"),
+            required_skills=extracted.get("required_skills", []),
+            nice_to_have_skills=extracted.get("nice_to_have_skills", []),
+            context_keywords=extracted.get("context_keywords", []),
+            weights=DEFAULT_WEIGHTS_CORP_INTERN,
+            active=True,
+        )
+    else:
+        # Quality guardrail: not enough info for a reliable report
+        jobs = db.query(Job).filter(Job.active == True).all()
+        reason = ""
+        if extracted and extracted.get("error"):
+            reason = extracted["error"]
+        elif extracted and extracted.get("quality_reasons"):
+            reason = ", ".join(extracted["quality_reasons"])
+        else:
+            reason = "insufficient job content"
+        return templates.TemplateResponse("jobs.html", {
+            "request": request, "jobs": jobs,
+            "error": f"This result does not contain enough structured job information for a reliable assessment ({reason}). Please choose a more specific job posting.",
+            "search_enabled": True,
+        })
+
     db.add(job)
     db.commit()
     db.refresh(job)

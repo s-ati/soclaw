@@ -1,4 +1,8 @@
-"""Job search using DuckDuckGo (free, no API key) with Google CSE fallback."""
+"""Job search using DuckDuckGo (free, no API key) with Google CSE fallback.
+
+Search results are treated as discovery leads, not final job objects.
+Real job data is extracted from source URLs via job_extractor.py.
+"""
 
 import re
 from urllib.parse import urlparse
@@ -9,39 +13,68 @@ from .settings import settings
 GOOGLE_SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
 
 # ---------------------------------------------------------------------------
-# Skill / context extraction helpers
+# Search-result quality filtering
 # ---------------------------------------------------------------------------
-SKILL_KEYWORD_MAP = {
-    "excel": ["excel", "spreadsheet", "vba"],
-    "powerpoint": ["powerpoint", "presentation", "slides"],
-    "sql": ["sql", "database", "mysql", "postgres"],
-    "analysis": ["analysis", "analytical", "data analysis", "research"],
-    "financial_modeling": ["financial model", "valuation", "dcf", "modeling"],
-    "python": ["python", "pandas", "numpy", "programming"],
-}
-
-CONTEXT_KEYWORD_MAP = [
-    "corporate", "stakeholder", "matrix", "startup", "regulated",
-    "cross-functional", "creative", "tech", "consulting",
+AGGREGATOR_PATTERNS = [
+    r"\d{1,3},?\d{3}\+?\s+(?:jobs?|positions?|openings?|results?)",
+    r"\d{2,}\s+(?:jobs?|positions?|openings?)\s+(?:available|found|near|in)",
+    r"search\s+(?:results?|jobs?)\s+(?:for|in)",
+    r"browse\s+(?:all|our)\s+(?:jobs?|openings?|positions?)",
+    r"job\s+(?:board|listing|search|alert)",
+    r"top\s+\d+\s+(?:jobs?|companies)",
+    r"apply\s+to\s+\d+\s+",
+    r"page\s+\d+\s+of\s+\d+",
 ]
 
-LOCATION_KEYWORDS = {
-    "remote": ["remote", "work from home", "wfh", "anywhere"],
-    "hybrid": ["hybrid", "flexible"],
-    "onsite": ["onsite", "on-site", "in-office", "office-based"],
+AGGREGATOR_DOMAINS = {"google.com", "bing.com", "duckduckgo.com", "yahoo.com"}
+
+JOB_BOARD_DOMAINS = {
+    "indeed.com", "linkedin.com", "glassdoor.com", "ziprecruiter.com",
+    "monster.com", "dice.com", "wellfound.com", "lever.co", "greenhouse.io",
+    "workday.com", "smartrecruiters.com",
 }
 
 
-def _detect_location_policy(text: str) -> str:
-    t = text.lower()
-    for policy, keywords in LOCATION_KEYWORDS.items():
-        if any(kw in t for kw in keywords):
-            return policy
-    return "onsite"
+def _is_aggregator_result(title: str, snippet: str, url: str) -> bool:
+    combined = f"{title} {snippet}".lower()
+    for pat in AGGREGATOR_PATTERNS:
+        if re.search(pat, combined, re.IGNORECASE):
+            return True
+    domain = urlparse(url).netloc.replace("www.", "")
+    return domain in AGGREGATOR_DOMAINS
 
 
-def _extract_company(title: str, snippet: str, source: str) -> str:
-    """Try to extract a company name from the search result."""
+def _result_quality_score(title: str, snippet: str, url: str) -> int:
+    score = 50
+    combined = f"{title} {snippet}".lower()
+    domain = urlparse(url).netloc.replace("www.", "")
+
+    if any(jb in domain for jb in JOB_BOARD_DOMAINS):
+        score += 15
+    job_terms = ["intern", "analyst", "engineer", "developer", "manager", "designer",
+                 "coordinator", "specialist", "associate", "consultant", "assistant"]
+    if any(t in combined for t in job_terms):
+        score += 15
+    path = urlparse(url).path.lower()
+    if re.search(r"/(?:jobs?|careers?|positions?)/\d+", path):
+        score += 20
+    elif re.search(r"/(?:jobs?|careers?|positions?)/[a-z]", path):
+        score += 10
+    if _is_aggregator_result(title, snippet, url):
+        score -= 40
+    if len(snippet) < 30:
+        score -= 15
+    return max(0, min(100, score))
+
+
+def _clean_title(title: str) -> str:
+    for pattern in [r"\s*[\|–—-]\s*(Indeed|LinkedIn|Glassdoor|ZipRecruiter|Monster|Dice|Google|DuckDuckGo).*$",
+                    r"\s*-\s*job posting.*$"]:
+        title = re.sub(pattern, "", title, flags=re.IGNORECASE)
+    return title.strip()[:200]
+
+
+def _extract_company(title: str, source: str) -> str:
     boards = ["indeed", "linkedin", "glassdoor", "ziprecruiter",
               "monster", "dice", "angel", "wellfound", "google",
               "duckduckgo", "bing"]
@@ -52,63 +85,40 @@ def _extract_company(title: str, snippet: str, source: str) -> str:
                 candidate = parts[-1].strip()
                 if not any(b in candidate.lower() for b in boards):
                     return candidate[:100]
-    # Fallback: domain name
     domain = source.replace("www.", "").split(".")[0] if source else "Unknown"
     return domain.title()
 
 
-def _extract_skills(text: str) -> list[dict]:
-    t = text.lower()
-    skills = []
-    for canonical, variants in SKILL_KEYWORD_MAP.items():
-        if any(v in t for v in variants):
-            skills.append({"name": canonical, "tier": "must", "weight": 2})
-    return skills
-
-
-def _extract_context_keywords(text: str) -> list[str]:
-    t = text.lower()
-    return [kw for kw in CONTEXT_KEYWORD_MAP if kw in t]
-
-
-def _clean_title(title: str) -> str:
-    for pattern in [r"\s*[\|–—-]\s*(Indeed|LinkedIn|Glassdoor|ZipRecruiter|Monster|Dice|Google|DuckDuckGo).*$",
-                    r"\s*-\s*job posting.*$"]:
-        title = re.sub(pattern, "", title, flags=re.IGNORECASE)
-    return title.strip()[:200]
-
-
-# ---------------------------------------------------------------------------
-# Normalize a search result (works for both DDG and Google)
-# ---------------------------------------------------------------------------
 def _normalize(title: str, snippet: str, url: str, source: str) -> dict:
     title = _clean_title(title)
-    combined = f"{title} {snippet}"
+    quality = _result_quality_score(title, snippet, url)
     return {
         "title": title,
-        "company": _extract_company(title, snippet, source),
-        "location_policy": _detect_location_policy(combined),
-        "required_skills": _extract_skills(combined),
-        "nice_to_have_skills": [],
-        "context_keywords": _extract_context_keywords(combined),
+        "company": _extract_company(title, source),
         "snippet": snippet.strip(),
         "url": url,
         "source": source,
+        "quality_score": quality,
+        "is_aggregator": _is_aggregator_result(title, snippet, url),
     }
 
 
+def _filter_and_rank(results: list[dict]) -> list[dict]:
+    filtered = [r for r in results if r["quality_score"] >= 20]
+    filtered.sort(key=lambda r: r["quality_score"], reverse=True)
+    return filtered
+
+
 # ---------------------------------------------------------------------------
-# DuckDuckGo search (free, no API key)
+# DuckDuckGo search
 # ---------------------------------------------------------------------------
 async def _search_ddg(query: str, num: int = 10) -> dict:
-    """Search using duckduckgo-search library (runs sync in thread)."""
     import asyncio
     from concurrent.futures import ThreadPoolExecutor
 
     def _do_search():
         from duckduckgo_search import DDGS
-        results = DDGS().text(f"{query} job", max_results=num)
-        return results
+        return DDGS().text(f"{query} job posting", max_results=min(num * 2, 20))
 
     try:
         loop = asyncio.get_event_loop()
@@ -128,7 +138,9 @@ async def _search_ddg(query: str, num: int = 10) -> dict:
                 url=url,
                 source=source,
             ))
-        return {"results": results, "error": None}
+
+        filtered = _filter_and_rank(results)[:num]
+        return {"results": filtered, "error": None}
 
     except Exception as e:
         err = str(e)
@@ -146,7 +158,7 @@ async def _search_google(query: str, num: int = 10) -> dict:
     params = {
         "key": settings.google_search_api_key,
         "cx": settings.google_cse_id,
-        "q": f"{query} job",
+        "q": f"{query} job posting",
         "num": min(num, 10),
     }
     try:
@@ -182,7 +194,9 @@ async def _search_google(query: str, num: int = 10) -> dict:
                 url=item.get("link", ""),
                 source=item.get("displayLink", ""),
             ))
-        return {"results": results, "error": None}
+
+        filtered = _filter_and_rank(results)[:num]
+        return {"results": filtered, "error": None}
 
     except httpx.TimeoutException:
         return {"results": [], "error": "Search request timed out."}
@@ -193,21 +207,17 @@ async def _search_google(query: str, num: int = 10) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Main entry point: tries DDG first, falls back to Google if configured
+# Main entry point
 # ---------------------------------------------------------------------------
 async def search_jobs(query: str, num: int = 10) -> dict:
-    """Search for jobs. Uses DuckDuckGo (free) first, Google CSE as fallback."""
     if not query or not query.strip():
         return {"results": [], "error": "Search query is required."}
 
-    # Try DuckDuckGo first (free, no key needed)
     result = await _search_ddg(query.strip(), num)
 
-    # If DDG failed and Google is configured, try Google
     if result.get("error") and settings.google_search_api_key and settings.google_cse_id:
         google_result = await _search_google(query.strip(), num)
         if not google_result.get("error"):
             return google_result
-        # Both failed — return DDG error (more likely a network issue)
 
     return result

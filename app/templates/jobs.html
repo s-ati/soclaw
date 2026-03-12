@@ -13,29 +13,20 @@
   .job-card:nth-child(4) { animation-delay: 0.24s; }
   .job-card:nth-child(5) { animation-delay: 0.32s; }
   .job-card:nth-child(6) { animation-delay: 0.40s; }
-  .job-card:nth-child(7) { animation-delay: 0.48s; }
-  .job-card:nth-child(8) { animation-delay: 0.56s; }
   .details-panel {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.3s ease, padding 0.3s ease;
+    opacity: 0; padding-top: 0; padding-bottom: 0;
   }
   .details-panel.open {
-    max-height: 600px;
-    opacity: 1;
-    padding-top: 1rem;
-    padding-bottom: 0.25rem;
+    max-height: 800px; opacity: 1; padding-top: 1rem; padding-bottom: 0.25rem;
   }
   .chevron-icon { transition: transform 0.3s ease; }
   .chevron-icon.rotated { transform: rotate(180deg); }
-  @keyframes pulse-subtle {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; }
-  }
+  @keyframes pulse-subtle { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
   .skeleton-pulse { animation: pulse-subtle 1.5s ease-in-out infinite; }
+  .quality-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .quality-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
 </style>
 
 <!-- Page Header -->
@@ -44,10 +35,9 @@
     <svg class="w-8 h-8 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
     Available Jobs
   </h1>
-  <p class="text-white/40 mt-1 font-light">Search for real jobs or browse existing roles, then select one to generate your personalized assessment report.</p>
+  <p class="text-white/40 mt-1 font-light">Search for real jobs, preview the extracted details, then select one to generate your assessment.</p>
 </div>
 
-<!-- Error Message -->
 {% if error %}
 <div class="mb-6 bg-red-500/10 border border-red-500/20 rounded-md px-5 py-4 flex items-center gap-3">
   <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -61,7 +51,7 @@
   <div class="flex flex-col sm:flex-row gap-3">
     <div class="flex-1 relative">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" id="job-search-input" placeholder="Search jobs... e.g. &quot;Data Analyst Berlin&quot;"
+      <input type="text" id="job-search-input" placeholder="Search jobs... e.g. &quot;Data Analyst intern Berlin&quot;"
         class="w-full pl-10 pr-4 py-3 rounded-md bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/30 focus:outline-none focus:border-gold-500/40 focus:ring-1 focus:ring-gold-500/20 text-sm"
         onkeydown="if(event.key==='Enter')searchJobs()">
     </div>
@@ -72,18 +62,15 @@
     </button>
   </div>
 
-  <!-- Search Status -->
   <div id="search-status" class="hidden mt-4">
     <div id="search-loading" class="hidden">
       <div class="flex items-center gap-3 text-white/40 text-sm">
         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
         Searching for jobs...
       </div>
-      <!-- Loading skeletons -->
       <div class="mt-4 space-y-3">
-        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]"></div>
-        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.3s"></div>
-        <div class="skeleton-pulse h-20 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.6s"></div>
+        <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]"></div>
+        <div class="skeleton-pulse h-24 rounded-lg bg-white/[0.04] border border-white/[0.06]" style="animation-delay:0.3s"></div>
       </div>
     </div>
     <div id="search-error" class="hidden bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 flex items-center gap-3">
@@ -92,7 +79,6 @@
     </div>
   </div>
 
-  <!-- Search Results -->
   <div id="search-results" class="hidden mt-4">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-sm font-semibold text-white/60">Search Results</h3>
@@ -103,7 +89,7 @@
 </div>
 {% endif %}
 
-<!-- Existing Jobs Section -->
+<!-- Saved Jobs Section -->
 <div class="mb-4">
   <h2 class="text-lg font-semibold text-white/70 flex items-center gap-2">
     <svg class="w-5 h-5 text-gold-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -111,129 +97,69 @@
   </h2>
 </div>
 
-<!-- Job Cards -->
 <div class="space-y-4">
   {% for j in jobs %}
   <div class="job-card card-premium rounded-lg hover:border-gold-500/20 transition-all">
-    <!-- Job Header -->
     <div class="p-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex-1">
           <h3 class="font-bold text-white text-lg mb-1">{{ j.title }}</h3>
           <p class="text-gold-500 font-medium text-sm mb-3">{{ j.company }}</p>
-
-          <!-- Location Badge -->
           {% if j.location_policy == 'remote' %}
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Remote
-          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>
           {% elif j.location_policy == 'hybrid' %}
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            Hybrid
-          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>
           {% else %}
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Onsite
-          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Onsite</span>
           {% endif %}
         </div>
-
-        <!-- Actions -->
         <div class="flex items-center gap-3 flex-shrink-0">
           <button onclick="toggleDetails({{ j.id }})" type="button"
             class="inline-flex items-center gap-2 text-white/40 hover:text-gold-500 font-medium py-2 px-4 rounded-md border border-white/[0.08] hover:border-gold-500/30 hover:bg-gold-500/[0.04] transition-all text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Details
             <svg id="chevron-{{ j.id }}" class="w-4 h-4 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <form method="post" action="/assess/{{ j.id }}" onsubmit="handleJobSubmit(this)">
-            <button type="submit"
-              class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm">
+            <button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm">
               <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
               <span class="btn-text">Select Job</span>
             </button>
           </form>
         </div>
       </div>
-
-      <!-- Expandable Details Panel -->
       <div id="details-{{ j.id }}" class="details-panel border-t border-white/[0.06] mt-4">
-        <!-- Required Skills -->
-        <div class="mb-4">
-          <h4 class="text-sm font-semibold text-white/60 mb-2 flex items-center gap-2">
-            <svg class="w-4 h-4 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Required Skills
-          </h4>
+        {% if j.required_skills %}
+        <div class="mb-3">
+          <h4 class="text-xs font-semibold text-white/50 mb-2">Required Skills</h4>
           <div class="flex flex-wrap gap-2">
             {% for skill in j.required_skills %}
-            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium
-              {% if skill.tier == 'must' %}bg-red-500/10 text-red-400 border border-red-500/20
-              {% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
-              {{ skill.name | replace("_", " ") | title }}
-              {% if skill.tier == 'must' %}<span class="ml-1 text-red-500">*</span>{% endif %}
+            <span class="px-2 py-0.5 rounded text-xs font-medium {% if skill.tier == 'must' %}bg-red-500/10 text-red-400 border border-red-500/20{% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
+              {{ skill.name | replace("_", " ") | title }}{% if skill.tier == 'must' %} *{% endif %}
             </span>
             {% endfor %}
           </div>
         </div>
-
-        <!-- Nice-to-Have Skills -->
+        {% endif %}
         {% if j.nice_to_have_skills %}
-        <div class="mb-4">
-          <h4 class="text-sm font-semibold text-white/60 mb-2 flex items-center gap-2">
-            <svg class="w-4 h-4 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-            Nice to Have
-          </h4>
+        <div class="mb-3">
+          <h4 class="text-xs font-semibold text-white/50 mb-2">Nice to Have</h4>
           <div class="flex flex-wrap gap-2">
             {% for skill in j.nice_to_have_skills %}
-            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-white/[0.04] text-white/50 border border-white/[0.08]">
-              {{ skill.name | replace("_", " ") | title }}
-            </span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-white/[0.04] text-white/40 border border-white/[0.08]">{{ skill.name | replace("_", " ") | title }}</span>
             {% endfor %}
           </div>
         </div>
         {% endif %}
-
-        <!-- Context -->
         {% if j.context_keywords %}
-        <div class="mb-4">
-          <h4 class="text-sm font-semibold text-white/60 mb-2 flex items-center gap-2">
-            <svg class="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-            Work Context
-          </h4>
+        <div class="mb-3">
+          <h4 class="text-xs font-semibold text-white/50 mb-2">Work Context</h4>
           <div class="flex flex-wrap gap-2">
             {% for kw in j.context_keywords %}
-            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              {{ kw | title }}
-            </span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">{{ kw | title }}</span>
             {% endfor %}
           </div>
         </div>
         {% endif %}
-
-        <!-- Location Info -->
-        <div>
-          <h4 class="text-sm font-semibold text-white/60 mb-2 flex items-center gap-2">
-            <svg class="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Location Policy
-          </h4>
-          <p class="text-sm text-white/40">
-            {% if j.location_policy == 'remote' %}
-            This role is fully remote. You can work from anywhere.
-            {% elif j.location_policy == 'hybrid' %}
-            This role requires a mix of onsite and remote work.
-            {% else %}
-            This role requires onsite presence at company offices.
-            {% endif %}
-          </p>
-        </div>
-
-        <!-- Legend -->
-        <div class="mt-4 pt-3 border-t border-white/[0.06]">
-          <p class="text-xs text-white/20"><span class="text-red-400">*</span> = Must-have skill &mdash; missing this skill triggers a risk flag.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -241,13 +167,15 @@
 </div>
 
 {% if not jobs %}
-<div class="text-center py-16">
-  <svg class="w-16 h-16 text-white/10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+<div class="text-center py-12">
   <p class="text-white/20">No saved jobs. Use the search above to find real job listings.</p>
 </div>
 {% endif %}
 
 <script>
+  // Cache for extracted job details
+  var extractCache = {};
+
   function toggleDetails(jobId) {
     var panel = document.getElementById('details-' + jobId);
     var chevron = document.getElementById('chevron-' + jobId);
@@ -260,62 +188,55 @@
     btn.disabled = true;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
     btn.querySelector('.btn-icon').outerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
-    btn.querySelector('.btn-text').textContent = 'Generating Report...';
+    btn.querySelector('.btn-text').textContent = 'Extracting & Generating...';
   }
 
-  // --- Live Job Search ---
   function searchJobs() {
     var q = document.getElementById('job-search-input').value.trim();
     if (!q) return;
-
     var statusEl = document.getElementById('search-status');
     var loadingEl = document.getElementById('search-loading');
     var errorEl = document.getElementById('search-error');
     var resultsEl = document.getElementById('search-results');
     var listEl = document.getElementById('search-results-list');
 
-    // Show loading
     statusEl.classList.remove('hidden');
     loadingEl.classList.remove('hidden');
     errorEl.classList.add('hidden');
     resultsEl.classList.add('hidden');
     listEl.innerHTML = '';
 
-    // Disable search button
     var btn = document.getElementById('search-btn');
     btn.disabled = true;
     btn.classList.add('opacity-75');
 
     fetch('/api/jobs/search?q=' + encodeURIComponent(q))
-      .then(function(resp) { return resp.json(); })
+      .then(function(r) { return r.json(); })
       .then(function(data) {
         loadingEl.classList.add('hidden');
         btn.disabled = false;
         btn.classList.remove('opacity-75');
-
         if (data.error) {
           errorEl.classList.remove('hidden');
           document.getElementById('search-error-text').textContent = data.error;
           return;
         }
-
         if (!data.results || data.results.length === 0) {
           errorEl.classList.remove('hidden');
           document.getElementById('search-error-text').textContent = 'No results found. Try a different search term.';
           return;
         }
-
         resultsEl.classList.remove('hidden');
         data.results.forEach(function(job, idx) {
           listEl.innerHTML += renderSearchResult(job, idx);
         });
       })
-      .catch(function(err) {
+      .catch(function() {
         loadingEl.classList.add('hidden');
         btn.disabled = false;
         btn.classList.remove('opacity-75');
         errorEl.classList.remove('hidden');
-        document.getElementById('search-error-text').textContent = 'Network error. Please check your connection and try again.';
+        document.getElementById('search-error-text').textContent = 'Network error. Please try again.';
       });
   }
 
@@ -324,86 +245,159 @@
     document.getElementById('search-results').classList.add('hidden');
     document.getElementById('search-results-list').innerHTML = '';
     document.getElementById('job-search-input').value = '';
+    extractCache = {};
   }
 
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
   }
 
-  function locationBadge(policy) {
-    if (policy === 'remote') {
-      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>';
-    } else if (policy === 'hybrid') {
-      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>';
-    }
-    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Onsite</span>';
+  function locationBadge(p) {
+    if (p === 'remote') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">Remote</span>';
+    if (p === 'hybrid') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Hybrid</span>';
+    return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-gold-500/10 text-gold-400 border border-gold-500/20">Onsite</span>';
   }
 
   function skillBadges(skills) {
-    if (!skills || skills.length === 0) return '';
+    if (!skills || !skills.length) return '';
     return skills.map(function(s) {
-      var name = (s.name || '').replace(/_/g, ' ');
-      name = name.charAt(0).toUpperCase() + name.slice(1);
-      return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/[0.04] text-white/50 border border-white/[0.08]">' + escapeHtml(name) + '</span>';
+      var n = (s.name||'').replace(/_/g,' ');
+      n = n.charAt(0).toUpperCase() + n.slice(1);
+      var cls = s.tier === 'must' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-white/[0.04] text-white/50 border-white/[0.08]';
+      return '<span class="px-2 py-0.5 rounded text-xs font-medium border ' + cls + '">' + escapeHtml(n) + (s.tier==='must'?' *':'') + '</span>';
     }).join('');
   }
 
+  function qualityIndicator(score, isAgg) {
+    var color = score >= 70 ? '#0D9488' : score >= 40 ? '#D4A843' : '#EF4444';
+    var label = score >= 70 ? 'Likely a real posting' : score >= 40 ? 'May be a listing page' : 'Probably not a job posting';
+    if (isAgg) { label = 'Listing/category page'; color = '#EF4444'; }
+    return '<div class="mt-2"><div class="quality-bar" style="width:80px"><div class="quality-fill" style="width:' + Math.max(10,score) + '%;background:' + color + '"></div></div><span class="text-[10px] text-white/20 ml-1">' + escapeHtml(label) + '</span></div>';
+  }
+
+  // Fetch extracted details for a search result
+  function fetchDetails(idx, url) {
+    var panel = document.getElementById('sr-details-' + idx);
+    var chevron = document.getElementById('sr-chevron-' + idx);
+
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      chevron.classList.remove('rotated');
+      return;
+    }
+
+    chevron.classList.add('rotated');
+
+    // Check cache
+    if (extractCache[url]) {
+      renderExtractedDetails(idx, extractCache[url]);
+      panel.classList.add('open');
+      return;
+    }
+
+    // Show loading state
+    panel.innerHTML = '<div class="flex items-center gap-2 text-white/30 text-xs py-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Extracting job details from source page...</div>';
+    panel.classList.add('open');
+
+    fetch('/api/jobs/extract?url=' + encodeURIComponent(url))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        extractCache[url] = data;
+        renderExtractedDetails(idx, data);
+      })
+      .catch(function() {
+        panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">Failed to extract details. The page may be unavailable.</p>';
+      });
+  }
+
+  function renderExtractedDetails(idx, data) {
+    var panel = document.getElementById('sr-details-' + idx);
+    if (data.error && !data.quality_sufficient) {
+      panel.innerHTML = '<p class="text-red-400/60 text-xs py-2">' + escapeHtml(data.error) + '</p>';
+      return;
+    }
+
+    var h = '';
+
+    if (data.title) {
+      h += '<div class="mb-2"><span class="text-xs text-white/40">Extracted Title:</span> <span class="text-sm text-white font-medium">' + escapeHtml(data.title) + '</span></div>';
+    }
+    if (data.company && data.company !== 'Unknown') {
+      h += '<div class="mb-2"><span class="text-xs text-white/40">Company:</span> <span class="text-sm text-white">' + escapeHtml(data.company) + '</span></div>';
+    }
+    if (data.location_policy) {
+      h += '<div class="mb-3">' + locationBadge(data.location_policy) + '</div>';
+    }
+
+    if (data.required_skills && data.required_skills.length) {
+      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Skills Found</h4><div class="flex flex-wrap gap-1">' + skillBadges(data.required_skills.concat(data.nice_to_have_skills || [])) + '</div></div>';
+    }
+
+    if (data.requirements) {
+      var reqText = data.requirements.substring(0, 500);
+      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Requirements</h4><p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(reqText) + (data.requirements.length > 500 ? '...' : '') + '</p></div>';
+    }
+
+    if (data.responsibilities) {
+      var respText = data.responsibilities.substring(0, 400);
+      h += '<div class="mb-3"><h4 class="text-xs font-semibold text-white/50 mb-1">Responsibilities</h4><p class="text-xs text-white/30 leading-relaxed whitespace-pre-line">' + escapeHtml(respText) + (data.responsibilities.length > 400 ? '...' : '') + '</p></div>';
+    }
+
+    var qScore = data.extraction_quality || 0;
+    var qLabel = qScore >= 60 ? 'Good — enough for assessment' : qScore >= 40 ? 'Fair — basic assessment possible' : 'Weak — may produce unreliable results';
+    var qColor = qScore >= 60 ? 'text-green-400' : qScore >= 40 ? 'text-gold-400' : 'text-red-400';
+    h += '<div class="pt-2 border-t border-white/[0.06]"><span class="text-[10px] text-white/20">Extraction quality: </span><span class="text-[10px] ' + qColor + '">' + qLabel + ' (' + qScore + '/100)</span></div>';
+
+    panel.innerHTML = h;
+  }
+
   function renderSearchResult(job, idx) {
-    var skillsJson = JSON.stringify(job.required_skills || []).replace(/"/g, '&quot;');
-    var niceSkillsJson = JSON.stringify(job.nice_to_have_skills || []).replace(/"/g, '&quot;');
-    var ctxJson = JSON.stringify(job.context_keywords || []).replace(/"/g, '&quot;');
+    var h = '<div class="job-card card-premium rounded-lg hover:border-gold-500/20 transition-all" style="animation-delay:' + (idx*0.06) + 's">';
+    h += '<div class="p-5">';
+    h += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">';
 
-    var html = '<div class="job-card card-premium rounded-lg hover:border-gold-500/20 transition-all" style="animation-delay:' + (idx * 0.06) + 's">';
-    html += '<div class="p-5">';
-    html += '<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">';
-
-    // Left: job info
-    html += '<div class="flex-1 min-w-0">';
-    html += '<h3 class="font-bold text-white text-base mb-1 truncate">' + escapeHtml(job.title) + '</h3>';
-    html += '<p class="text-gold-500 font-medium text-sm mb-2">' + escapeHtml(job.company) + '</p>';
-
-    // Snippet
+    // Left
+    h += '<div class="flex-1 min-w-0">';
+    h += '<h3 class="font-bold text-white text-base mb-1">' + escapeHtml(job.title) + '</h3>';
+    h += '<p class="text-gold-500 font-medium text-sm mb-1">' + escapeHtml(job.company) + '</p>';
     if (job.snippet) {
-      html += '<p class="text-white/30 text-xs leading-relaxed mb-2 line-clamp-2">' + escapeHtml(job.snippet) + '</p>';
+      h += '<p class="text-white/25 text-xs leading-relaxed mb-2 line-clamp-2">' + escapeHtml(job.snippet) + '</p>';
     }
-
-    // Badges row
-    html += '<div class="flex flex-wrap items-center gap-2">';
-    html += locationBadge(job.location_policy);
-    html += skillBadges(job.required_skills);
-    html += '</div>';
-
-    // Source link
     if (job.url) {
-      html += '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-2 text-xs text-white/20 hover:text-gold-500/60 transition-colors">';
-      html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-      html += escapeHtml(job.source || 'View original');
-      html += '</a>';
+      h += '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-white/20 hover:text-gold-500/60 transition-colors">';
+      h += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+      h += escapeHtml(job.source || 'View original') + '</a>';
     }
+    h += qualityIndicator(job.quality_score || 50, job.is_aggregator);
+    h += '</div>';
 
-    html += '</div>';
+    // Right: buttons
+    h += '<div class="flex flex-col gap-2 flex-shrink-0">';
 
-    // Right: select button
-    html += '<div class="flex-shrink-0">';
-    html += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
-    html += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
-    html += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
-    html += '<input type="hidden" name="location_policy" value="' + escapeHtml(job.location_policy) + '">';
-    html += '<input type="hidden" name="required_skills" value="' + skillsJson + '">';
-    html += '<input type="hidden" name="nice_to_have_skills" value="' + niceSkillsJson + '">';
-    html += '<input type="hidden" name="context_keywords" value="' + ctxJson + '">';
-    html += '<input type="hidden" name="url" value="' + escapeHtml(job.url || '') + '">';
-    html += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm">';
-    html += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-    html += '<span class="btn-text">Select Job</span>';
-    html += '</button>';
-    html += '</form>';
-    html += '</div>';
+    // Details button
+    h += '<button onclick="fetchDetails(' + idx + ',\'' + escapeHtml(job.url||'').replace(/'/g,"\\'") + '\')" type="button"';
+    h += ' class="inline-flex items-center gap-2 text-white/40 hover:text-gold-500 font-medium py-2 px-4 rounded-md border border-white/[0.08] hover:border-gold-500/30 hover:bg-gold-500/[0.04] transition-all text-sm">';
+    h += 'Details <svg id="sr-chevron-' + idx + '" class="w-4 h-4 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+    h += '</button>';
 
-    html += '</div></div></div>';
-    return html;
+    // Select button (form posts URL for backend extraction)
+    h += '<form method="post" action="/jobs/from-search" onsubmit="handleJobSubmit(this)">';
+    h += '<input type="hidden" name="url" value="' + escapeHtml(job.url||'') + '">';
+    h += '<input type="hidden" name="title" value="' + escapeHtml(job.title) + '">';
+    h += '<input type="hidden" name="company" value="' + escapeHtml(job.company) + '">';
+    h += '<button type="submit" class="job-select-btn btn-gold inline-flex items-center gap-2 py-2.5 px-5 rounded-md text-sm w-full justify-center">';
+    h += '<svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+    h += '<span class="btn-text">Select Job</span></button></form>';
+
+    h += '</div></div>';
+
+    // Expandable details panel (populated by fetchDetails)
+    h += '<div id="sr-details-' + idx + '" class="details-panel border-t border-white/[0.06] mt-3"></div>';
+
+    h += '</div></div>';
+    return h;
   }
 </script>
 
