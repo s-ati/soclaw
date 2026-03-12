@@ -322,7 +322,7 @@ async def create_job_from_search(
             reason = "insufficient job content"
         return templates.TemplateResponse("jobs.html", {
             "request": request, "jobs": jobs,
-            "error": f"This result does not contain enough structured job information for a reliable assessment ({reason}). Please choose a more specific job posting.",
+            "error": f"Could not extract enough job details from this page ({reason}). Please choose a different posting \u2014 results marked \u201cHigh\u201d extractability work best.",
             "search_enabled": True,
         })
 
